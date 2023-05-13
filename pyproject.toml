@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "ugc-sprint-1"
+version = "0.1.0"
+description = ""
+authors = ["VladIs10ve", "zippygrill0", "StanleyOneG"]
+readme = "README.md"
+packages = [{include = "ugc_sprint_1"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.linter.dependencies]
+flake8 = "4.0"
+flake8-bandit = "3.0.0"
+bandit = "1.7.4"
+black = "^23.3.0"
+pre-commit = "^3.3.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+skip-string-normalization = true
