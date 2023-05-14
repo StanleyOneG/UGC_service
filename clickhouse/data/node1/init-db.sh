@@ -1,5 +1,4 @@
-#!/bin/bash
-# -- node 1
+
 set -e
 
 echo ======== starting to create databases and tables ===============
