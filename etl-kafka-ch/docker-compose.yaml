@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+
+  clickhouse:
+    build: ./
+    container_name: clickhouse
+    hostname: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
