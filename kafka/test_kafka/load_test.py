@@ -1,6 +1,5 @@
 """Module for load testing of Kafka."""
 
-import json
 import time
 
 from confluent_kafka import Producer
@@ -14,23 +13,23 @@ class KafkaLoadTest(HttpUser):
 
     wait_time = between(1, 3)  # Wait time between consecutive tasks
 
-    host = 'http://localhost:9092'
+    host = 'kafka-1:29092'
 
     @task
     def produce_messages(self):
         """Produce messages to Kafka and gather statistics."""
         # Kafka broker configuration
         conf = {
-            'bootstrap.servers': 'localhost:9092',
+            'bootstrap.servers': 'kafka-1:29092',
         }
 
         # Create Kafka producer
         producer = Producer(conf)
 
         # Produce messages to Kafka
-        message = {'key': 'value'}
+        message = 'value'  # Message as a string
         request_time_start = time.time()
-        producer.produce(topic, value=json.dumps(message).encode('utf-8'))
+        producer.produce(topic, value=message.encode('utf-8'))
 
         # Flush the producer to ensure the message is sent immediately
         producer.flush()
