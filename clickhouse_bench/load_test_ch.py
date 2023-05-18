@@ -1,67 +1,106 @@
 """Module for ClickHouse load test."""
 
-import random
-import string
+import logging
+import time
 
-from clickhouse_driver import Client
-from locust import HttpUser, between, events, task
+from config.conf import create_client
+from locust import LoadTestShape, User, between, events, task
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-class ClickHouseLoadTest(HttpUser):
+class ClickHouseLoadTest(User):
     """Test class for load testing ClickHouse."""
 
     wait_time = between(1, 3)  # Wait time between consecutive tasks
-    client = None
 
     @events.test_start.add_listener
-    def on_test_start(self, **kwargs):
+    def on_test_start(environment, **kwargs):
         """Event listener for test start event. Perform any setup operations on test start."""
-        # ClickHouse connection configuration
-        connection_settings = {
-            'host': 'localhost',
-            'port': 8123,
-            'user': 'default',
-            'password': '',
-            'database': 'default',
-        }
+        data = ((x,) for x in range(10_000_000))
 
-        # Create a ClickHouse client
-        self.client = Client(**connection_settings)
+        clickhouse = create_client()
+        logger.info('CLIENT CREATED')
+        # Create testing table
+        create_query = 'CREATE TABLE if not exists test (x Int32) ENGINE = Memory'
+        clickhouse.execute(create_query)
 
-        # Generate and insert random data
-        data = []
-        for _ in range(10000000):
-            random_string = ''.join(random.choices(string.ascii_lowercase, k=10))
-            random_number = random.randint(1, 100)
-            data.append((random_string, random_number))
+        logger.info('TABLE CREATED')
 
         # Prepare INSERT query
-        query = 'INSERT INTO my_table (string_column, int_column) VALUES'
+        query = 'INSERT INTO test (x) VALUES'
 
         # Batch insert the data
-        self.client.execute(query, data)
+        clickhouse.execute(query, data)
+        logger.info('DATA INSERTED')
 
-        # Other setup operations you may want to perform on test start
+        logger.info('TEST STARTED')
 
-    @task
-    def execute_query(self):
+    def on_start(self):
+        """Event listener for user start event."""
+        self.clickhouse = create_client()
+
+    @task(1)
+    def execute_query_max(self):
         """Execute a sample ClickHouse query and gather statistics."""
-        # Generate random data
-        random_string = ''.join(random.choices(string.ascii_lowercase, k=10))
-        random_number = random.randint(1, 100)
-
         # Prepare SELECT query
-        query = f"SELECT * FROM my_table WHERE string_column = '{random_string}' AND int_column = {random_number}"
+        query = 'SELECT * FROM test LIMIT 1000'
 
         # Execute the query
-        response_time_start = self.client.get_current_time_in_millis()
-        self.client.execute(query)
-        response_time = self.client.get_current_time_in_millis() - response_time_start
+        start_time = time.time()
+        self.clickhouse.execute(query)
+        processing_time = int((time.time() - start_time) * 1000)
 
         # Gather statistics
-        self.environment.events.request_success.fire(
+        events.request.fire(
             request_type='execute_query',
             name='execute_query',
-            response_time=response_time,
+            response_time=processing_time,
             response_length=0,
         )
+
+    @task(5)
+    def execute_query_min(self):
+        """Execute a sample ClickHouse query and gather statistics."""
+        # Prepare SELECT query
+        query = 'SELECT * FROM test LIMIT 100'
+
+        # Execute the query
+        start_time = time.time()
+        self.clickhouse.execute(query)
+        processing_time = int((time.time() - start_time) * 1000)
+
+        # Gather statistics
+        events.request.fire(
+            request_type='execute_query',
+            name='execute_query',
+            response_time=processing_time,
+            response_length=0,
+        )
+
+    @events.test_stop.add_listener
+    def on_test_stop(environment, **kwargs):
+        """Event listener for test stop event."""
+        logger.info('TEST STOPPED')
+
+
+class StagesShape(LoadTestShape):
+    """Load test shape class."""
+
+    stages = [
+        {'duration': 20, 'users': 10, 'spawn_rate': 1},
+        {'duration': 40, 'users': 100, 'spawn_rate': 10},
+        {'duration': 60, 'users': 1000, 'spawn_rate': 100},
+        {'duration': 80, 'users': 3000, 'spawn_rate': 100},
+        {'duration': 100, 'users': 5000, 'spawn_rate': 100},
+    ]
+
+    def tick(self):
+        """Return the tick data."""
+        run_time = self.get_run_time()
+        for stage in self.stages:
+            if run_time < stage['duration']:
+                tick_data = (stage['users'], stage['spawn_rate'])
+                return tick_data
+        return None
