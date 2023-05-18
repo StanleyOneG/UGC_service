@@ -16,4 +16,8 @@ REDIS_PORT = configs.REDIS.PORT
 
 JWT_PUBLIC_KEY = configs.JWT.PUBLIC_KEY
 
+KAFKA_TOPIC = configs.KAFKA.TOPIC
+KAFKA_HOST = configs.KAFKA.HOST
+KAFKA_PORT = configs.KAFKA.PORT
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

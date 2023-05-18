@@ -58,9 +58,24 @@ class JwtSettings(BaseSettings):
         alias_generator = to_lower
 
 
+class KafkaSettings(BaseSettings):
+    """Configuration for KAFKA."""
+
+    TOPIC: str
+    HOST: str
+    PORT: int
+
+    class Config:
+        """Configuration class for correct env variables insertion."""
+
+        env_prefix = 'KAFKA_'
+        alias_generator = to_lower
+
+
 class Settings(BaseSettings):
     """Helper class for configuration access."""
 
     REDIS = RedisSettings()
     PROJECT = ProjectSettings()
     JWT = JwtSettings()
+    KAFKA = KafkaSettings()
