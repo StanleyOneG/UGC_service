@@ -1,2 +1,51 @@
-# version: "3.8"
-# services:
+version: "3.8"
+services:
+
+  ugc-api:
+    build:
+      context: ../ugc_api/src/
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis-ugc:
+        condition: service_started
+    expose:
+        - 8000
+    healthcheck:
+      test: curl -XGET http://ugc-api:8000/apidocs
+      interval: 8s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    container_name: ugc-api
+
+  ugc-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    depends_on:
+      ugc-api:
+        condition: service_healthy
+    container_name: ugc-tests
+
+  ugc-redis:
+    image: redis:latest
+    volumes:
+      - sprint08_ugc_tests_redis_server01data:/data:rw
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+    command: >
+      --save 60 1
+    container_name: redis-ugc
+
+volumes:
+  sprint08_ugc_tests_redis_server01data:
