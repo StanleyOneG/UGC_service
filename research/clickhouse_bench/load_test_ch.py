@@ -18,10 +18,10 @@ class ClickHouseLoadTest(User):
     @events.test_start.add_listener
     def on_test_start(environment, **kwargs):
         """Event listener for test start event. Perform any setup operations on test start."""
+        clickhouse = create_client()
+
         data = ((x,) for x in range(10_000_000))
 
-        clickhouse = create_client()
-        logger.info('CLIENT CREATED')
         # Create testing table
         create_query = 'CREATE TABLE if not exists test (x Int32) ENGINE = Memory'
         clickhouse.execute(create_query)
@@ -60,9 +60,10 @@ class ClickHouseLoadTest(User):
             response_length=0,
         )
 
-    @task(5)
+    @task(3)
     def execute_query_min(self):
         """Execute a sample ClickHouse query and gather statistics."""
+        global clickhouse
         # Prepare SELECT query
         query = 'SELECT * FROM test LIMIT 100'
 
@@ -92,8 +93,7 @@ class StagesShape(LoadTestShape):
         {'duration': 20, 'users': 10, 'spawn_rate': 1},
         {'duration': 40, 'users': 100, 'spawn_rate': 10},
         {'duration': 60, 'users': 1000, 'spawn_rate': 100},
-        {'duration': 80, 'users': 3000, 'spawn_rate': 100},
-        {'duration': 100, 'users': 5000, 'spawn_rate': 100},
+        {'duration': 100, 'users': 1500, 'spawn_rate': 100},
     ]
 
     def tick(self):

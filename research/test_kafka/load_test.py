@@ -12,11 +12,13 @@ logger = logging.getLogger(__name__)
 
 topic = 'test'
 
+producer = get_kafka_producer()
+
 
 class KafkaLoadTest(HttpUser):
     """Test class for load testing of Kafka."""
 
-    wait_time = between(1, 3)  # Wait time between consecutive tasks
+    wait_time = between(1, 3)
 
     host = 'kafka-1:29092'
 
@@ -25,20 +27,17 @@ class KafkaLoadTest(HttpUser):
         """Event listener for user start event."""
         logger.info('TEST STARTED')
 
-    def on_start(self):
-        """Event listener for user start event."""
-        self.producer = get_kafka_producer()
-
     @task
     def produce_messages(self):
         """Produce messages to Kafka and gather statistics."""
+        global producer
         # Produce messages to Kafka
         message = str(random.randint(1, 10000))
         request_time_start = time.time()
-        self.producer.produce(topic, value=message.encode('utf-8'))
+        producer.produce(topic, value=message.encode('utf-8'))
 
         # Flush the producer to ensure the message is sent immediately
-        self.producer.flush()
+        producer.flush()
 
         processing_time = int((time.time() - request_time_start) * 1000)
 
@@ -65,8 +64,8 @@ class StagesShape(LoadTestShape):
         {'duration': 40, 'users': 100, 'spawn_rate': 10},
         {'duration': 60, 'users': 1000, 'spawn_rate': 50},
         {'duration': 160, 'users': 1500, 'spawn_rate': 50},
-        # {'duration': 180, 'users': 5000, 'spawn_rate': 100},
-        # {'duration': 240, 'users': 10000, 'spawn_rate': 500},
+        {'duration': 180, 'users': 5000, 'spawn_rate': 100},
+        {'duration': 240, 'users': 10000, 'spawn_rate': 500},
     ]
 
     def tick(self):
