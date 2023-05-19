@@ -5,11 +5,12 @@ ENV \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-COPY requirements.txt load_test.py ./
+COPY requirements.txt load_test.py config.py ./
 
 RUN \
     mkdir -p /app/kafka \
     && groupadd -r web && useradd -d /app -r -g web web \
+    && mv /config.py /app/config.py \
     && mv /load_test.py /app/load_test.py \
     && chown web:web -R /app \
     && python -m pip install --upgrade pip \
@@ -22,4 +23,4 @@ WORKDIR /app
 
 USER web
 
-ENTRYPOINT locust -f load_test.py --headless -u 100 -r 5 --run-time 2m
+ENTRYPOINT locust -f load_test.py
