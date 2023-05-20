@@ -8,7 +8,7 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Request
 
-from services.kafka import producer, consumer
+from services.kafka import producer
 from auth.jwt import check_auth
 from db.redis import get_redis
 from core.config import KAFKA_TOPIC
