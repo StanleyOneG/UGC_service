@@ -5,11 +5,8 @@ This module defines API endpoints related to progress tracking.
 """
 import logging
 from http import HTTPStatus
-from typing import Annotated
-import json
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel
 
 from services.kafka import producer, consumer
 from auth.jwt import check_auth
