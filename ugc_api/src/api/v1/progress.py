@@ -5,6 +5,8 @@ This module defines API endpoints related to progress tracking.
 """
 import logging
 from http import HTTPStatus
+import uuid
+import json
 
 from fastapi import APIRouter, Request
 
