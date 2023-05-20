@@ -1,7 +1,7 @@
 set -e
 clickhouse client -n <<-EOSQL
   CREATE TABLE IF NOT EXISTS progress_queue (
-    id Int32,
+    id String,
     user_movie_id String,
     timestamp UInt64)
     ENGINE = Kafka
