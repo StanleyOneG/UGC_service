@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post('/')
+@router.post('/set_progress')
 @check_auth(endpoint_permission='subscriber')
 async def set_progress(request: Request, user_id=None):
     """
@@ -30,29 +30,32 @@ async def set_progress(request: Request, user_id=None):
         HTTPStatus: HTTP status code 200 (OK).
     """
     data = await request.form()
-    timecode = data.get('timecode')
-    film_id = data.get('film_id')
+    timestamp = data.get('timestamp')
+    movie_id = data.get('movie_id')
 
-    if not timecode or not user_id or not film_id:
+    if not timestamp or not user_id or not movie_id:
         return HTTPStatus.BAD_REQUEST
 
     topic = KAFKA_TOPIC
-    value = str(timecode).encode()
-    key = f'{user_id}:{film_id}'.encode()
+    value = {
+        "id": str(uuid.uuid4()),
+        "user_movie_id": str(movie_id),
+        "timestamp": timestamp
+    }
+    encoded_value = json.dumps(value).encode()
 
     producer.send(
         topic=topic,
-        value=value,
-        key=key
+        value=encoded_value,
     )
     redis = get_redis()
 
-    await redis.set(f'{user_id}:{film_id}', str(timecode))
+    await redis.set(f'{user_id}:{movie_id}', str(timestamp))
 
     return HTTPStatus.OK
 
 
-@router.get('/')
+@router.post('/get_progress')
 @check_auth(endpoint_permission='subscriber')
 async def get_progress(request: Request, user_id=None):
     """
@@ -63,15 +66,15 @@ async def get_progress(request: Request, user_id=None):
     """
 
     # Fetch the latest records
-    data = await request.form()
-    film_ids = data.get('film_ids').split(',')
+    data = await request.json()
+    movie_ids = data['movie_ids']
 
     redis = get_redis()
 
     list_of_timecodes = []
-    for film_id in film_ids:
-        timecode = await redis.get(f'{user_id}:{film_id}')
+    for movie_id in movie_ids:
+        timecode = await redis.get(f'{user_id}:{movie_id}')
         if timecode:
-            list_of_timecodes.append({film_id: timecode})
+            list_of_timecodes.append({movie_id: int(timecode)})
 
     return list_of_timecodes

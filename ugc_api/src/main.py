@@ -30,7 +30,7 @@ async def shutdown():
     await redis.redis.close()
 
 
-app.include_router(progress.router, prefix='/api/v1/progress', tags=['progress'])
+app.include_router(progress.router, prefix='/api/v1', tags=['progress'])
 
 if __name__ == '__main__':
     uvicorn.run(
