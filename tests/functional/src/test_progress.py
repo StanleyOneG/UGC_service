@@ -1,31 +1,48 @@
 from http import HTTPStatus
-import uuid
-import random
+import json
+
+from ..settings import test_settings
 
 
-def test_set_progress(post_request, do_test_user_register):
+def test_set_progress(post_request,
+                      do_test_user_login,
+                      generate_movie_id,
+                      generate_timestamp):
     """Set movie watch progress"""
-    r = do_test_user_register
+    r = do_test_user_login()
     cookies = r.cookies
     data = {
-        "film_id": '_'.join([str(uuid.uuid4()), str(uuid.uuid4())]),
-        "timecode": random.randint(0, 9223372036854775807)
+        "movie_id": generate_movie_id,
+        "timestamp": generate_timestamp
     }
-    result = post_request('/api/v1/set_progress', data, cookies)
+    result = post_request(test_settings.service_url,
+                          '/api/v1/set_progress',
+                          data,
+                          cookies)
     assert result.status_code == HTTPStatus.OK
 
 
-# def test_get_progress(post_request):
-#     """Get movies watch progress"""
-#     data = {
-#         "id": random.randint(0, 4294967295),
-#         "user_movie_id": uuid.uuid4() + '_' + uuid.uuid4(),
-#         "timestamp": random.randint(0, 9223372036854775807)
-#     }
-#     post_request('/api/v1/set_progress', data)
-#
-#     result = post_request('/api/v1/get_progress',
-#                           {"film_ids": [data.get('user_movie_id')]})
-#     result_data = result.json()
-#     assert result.status_code == HTTPStatus.OK
-#
+def test_get_progress(do_test_user_login,
+                      post_request,
+                      generate_movie_id,
+                      generate_timestamp):
+    """Get movies watch progress"""
+    r = do_test_user_login()
+    cookies = r.cookies
+    data = {
+        "movie_id": generate_movie_id,
+        "timestamp": generate_timestamp
+    }
+    post_request(test_settings.service_url,
+                 '/api/v1/set_progress',
+                 data,
+                 cookies)
+
+    result = post_request(test_settings.service_url,
+                          '/api/v1/get_progress',
+                          json.dumps({"movie_ids": [generate_movie_id]}),
+                          cookies)
+    result_data = result.json()
+    assert len(result_data) > 0
+    assert result_data[0].get(generate_movie_id) == generate_timestamp
+    assert result.status_code == HTTPStatus.OK
