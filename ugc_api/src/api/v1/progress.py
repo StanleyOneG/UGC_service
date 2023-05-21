@@ -41,7 +41,7 @@ async def set_progress(request: Request, user_id=None):
     topic = KAFKA_TOPIC
     value = {
         "id": str(uuid.uuid4()),
-        "user_movie_id": str(movie_id),
+        "user_movie_id": '_'.join([str(user_id), str(movie_id)]),
         "timestamp": timestamp
     }
     encoded_value = json.dumps(value).encode()
