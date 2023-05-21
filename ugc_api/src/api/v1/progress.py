@@ -34,9 +34,12 @@ async def set_progress(request: Request, user_id=None):
     data = await request.form()
     timestamp = data.get('timestamp')
     movie_id = data.get('movie_id')
-
-    if not timestamp or not user_id or not movie_id:
-        return HTTPStatus.BAD_REQUEST
+    if not timestamp:
+        return HTTPStatus.BAD_REQUEST, {"msg": "timestamp not present"}
+    if not user_id:
+        return HTTPStatus.BAD_REQUEST, {"msg": "user_id not present"}
+    if not movie_id:
+        return HTTPStatus.BAD_REQUEST, {"msg": "movie_id not present"}
 
     topic = KAFKA_TOPIC
     value = {

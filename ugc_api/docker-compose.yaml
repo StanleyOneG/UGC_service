@@ -12,7 +12,12 @@ services:
     expose:
       - 8000
     container_name: ugc_api
-
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/ugc_api:ro
+    networks:
+      - ugc-network
   redis_ugc:
     image: redis:latest
     volumes:
@@ -24,6 +29,8 @@ services:
     ports:
       - 6379:6379
     container_name: redis_ugc
+    networks:
+      - ugc-network
 
   nginx_ugc:
     image: nginx:1.23.3
@@ -37,6 +44,12 @@ services:
     ports:
       - 89:80
     container_name: nginx_ugc
+    networks:
+      - ugc-network
+
+networks:
+  ugc-network:
+    name: ugc-network
 
 volumes:
   redis_ugc_data:
