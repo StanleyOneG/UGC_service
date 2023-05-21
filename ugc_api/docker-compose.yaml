@@ -17,7 +17,7 @@ services:
     volumes:
       - ./src:/ugc_api:ro
     networks:
-      - ugc-network
+      - microservice-network
   redis_ugc:
     image: redis:latest
     volumes:
@@ -30,7 +30,7 @@ services:
       - 6379:6379
     container_name: redis_ugc
     networks:
-      - ugc-network
+      - microservice-network
 
   nginx_ugc:
     image: nginx:1.23.3
@@ -45,11 +45,11 @@ services:
       - 89:80
     container_name: nginx_ugc
     networks:
-      - ugc-network
+      - microservice-network
 
 networks:
-  ugc-network:
-    name: ugc-network
+  microservice-network:
+    name: microservice-network
 
 volumes:
   redis_ugc_data:

@@ -1,51 +1,96 @@
 version: "3.8"
 services:
 
-  ugc-api:
+  ugc_zookeeper_test:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: ugc_zookeeper_test
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - microservice-network
+
+  ugc_broker_test:
+    image: confluentinc/cp-kafka:5.3.1
+    container_name: ugc_broker_test
+    hostname: ugc_broker_test
+    ports:
+    - "9092:9092"
+    restart: always
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: ugc_broker_test
+      KAFKA_CFG_ZOOKEEPER_CONNECT: ugc_zookeeper_test:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INT
+      KAFKA_ZOOKEEPER_CONNECT: "ugc_zookeeper_test:2181"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ugc_broker_test:9092, INT://localhost:29092
+      KAFKA_LISTENERS: PLAINTEXT://:9092, INT://:29092
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    depends_on:
+    - ugc_zookeeper_test
+    networks:
+      - microservice-network
+
+  ugc_api_test:
     build:
-      context: ../ugc_api/src/
+      context: ../ugc_api/src
       dockerfile: Dockerfile
     env_file:
       - ./.env
-    ports:
-      - "8000:8000"
     depends_on:
-      redis-ugc:
+      redis_ugc_test:
         condition: service_started
     expose:
-        - 8000
+      - 8000
+    container_name: ugc_api_test
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../ugc_api/src:/ugc_api:ro
+    networks:
+      - microservice-network
     healthcheck:
-      test: curl -XGET http://ugc-api:8000/apidocs
+      test: curl -XGET http://ugc_api_test:8000/api/openapi
       interval: 8s
       timeout: 60s
       retries: 5
       start_period: 80s
-    container_name: ugc-api
 
-  ugc-tests:
+  redis_ugc_test:
+    image: redis:latest
+    volumes:
+      - redis_ugc_data_test:/data:rw
+    command: >
+      --save 60 1
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+    container_name: redis_ugc_test
+    networks:
+      - microservice-network
+
+  ugc_tests:
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - ./.env
     depends_on:
-      ugc-api:
+      redis_ugc_test:
+        condition: service_started
+      ugc_api_test:
         condition: service_healthy
-    container_name: ugc-tests
-
-  ugc-redis:
-    image: redis:latest
-    volumes:
-      - sprint08_ugc_tests_redis_server01data:/data:rw
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - "6379:6379"
-    expose:
-      - 6379
-    command: >
-      --save 60 1
-    container_name: redis-ugc
+    networks:
+      - microservice-network
 
 volumes:
-  sprint08_ugc_tests_redis_server01data:
+  redis_ugc_data_test:
+networks:
+  microservice-network:
+    name: microservice-network

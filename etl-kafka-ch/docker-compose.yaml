@@ -8,9 +8,9 @@ services:
       - "8123:8123"
       - "9000:9000"
     networks:
-      - kafka-ch
+      - microservice-network
     env_file:
       - ../ugc_api/.env
 networks:
-  kafka-ch:
-    name: kafka-ch
+  microservice-network:
+    name: microservice-network
