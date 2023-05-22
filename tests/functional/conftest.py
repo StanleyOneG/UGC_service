@@ -44,8 +44,7 @@ def token():
     to_encode.update({"permissions": ['subscriber']})
     to_encode.update({"sub": str(uuid.uuid4())})
     encoded_jwt = jwt.encode(to_encode, test_settings.jwt_private_key, algorithm='RS256')
-     
-    # return the generated token
+
     return encoded_jwt
 
 
