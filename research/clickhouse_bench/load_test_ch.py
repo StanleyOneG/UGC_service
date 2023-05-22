@@ -18,23 +18,6 @@ class ClickHouseLoadTest(User):
     @events.test_start.add_listener
     def on_test_start(environment, **kwargs):
         """Event listener for test start event. Perform any setup operations on test start."""
-        clickhouse = create_client()
-
-        data = ((x,) for x in range(10_000_000))
-
-        # Create testing table
-        create_query = 'CREATE TABLE if not exists test (x Int32) ENGINE = Memory'
-        clickhouse.execute(create_query)
-
-        logger.info('TABLE CREATED')
-
-        # Prepare INSERT query
-        query = 'INSERT INTO test (x) VALUES'
-
-        # Batch insert the data
-        clickhouse.execute(query, data)
-        logger.info('DATA INSERTED')
-
         logger.info('TEST STARTED')
 
     def on_start(self):
@@ -42,10 +25,10 @@ class ClickHouseLoadTest(User):
         self.clickhouse = create_client()
 
     @task(1)
-    def execute_query_max(self):
+    def average_progress_time(self):
         """Execute a sample ClickHouse query and gather statistics."""
         # Prepare SELECT query
-        query = 'SELECT * FROM test LIMIT 1000'
+        query = 'SELECT AVG(progress_time) FROM test'
 
         # Execute the query
         start_time = time.time()
@@ -54,18 +37,66 @@ class ClickHouseLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='execute_query',
-            name='execute_query',
+            request_type='average_progress_time',
+            name='average_progress_time',
+            response_time=processing_time,
+            response_length=0,
+        )
+
+    @task(2)
+    def find_movie_with_longest_progress_time(self):
+        """Execute a sample ClickHouse query and gather statistics."""
+        # Prepare SELECT query
+        query = 'SELECT movie_id, progress_time FROM test WHERE progress_time = (SELECT MAX(progress_time) FROM test)'
+
+        # Execute the query
+        start_time = time.time()
+        self.clickhouse.execute(query)
+        processing_time = int((time.time() - start_time) * 1000)
+
+        # Gather statistics
+        events.request.fire(
+            request_type='movie_with_longest_progress_time',
+            name='movie_with_longest_progress_time',
+            response_time=processing_time,
+            response_length=0,
+        )
+
+    @task(1)
+    def find_progress_by_range(self):
+        """Execute a sample ClickHouse query and gather statistics."""
+        # Prepare SELECT query
+        query = '''
+            SELECT
+                CASE
+                    WHEN progress_time <= 60000 THEN '0-60 seconds'
+                    WHEN progress_time <= 300000 THEN '1-5 minutes'
+                    WHEN progress_time <= 1800000 THEN '5-30 minutes'
+                    ELSE 'More than 30 minutes'
+                END AS duration_range,
+                COUNT(*) AS count
+            FROM test
+            GROUP BY duration_range
+        '''
+
+        # Execute the query
+        start_time = time.time()
+        self.clickhouse.execute(query)
+        processing_time = int((time.time() - start_time) * 1000)
+
+        # Gather statistics
+        events.request.fire(
+            request_type='progress_by_range',
+            name='progress_by_range',
             response_time=processing_time,
             response_length=0,
         )
 
     @task(3)
-    def execute_query_min(self):
+    def calculate_total_progress(self):
         """Execute a sample ClickHouse query and gather statistics."""
-        global clickhouse
         # Prepare SELECT query
-        query = 'SELECT * FROM test LIMIT 100'
+        query = 'SELECT SUM(progress_time) FROM test'
 
         # Execute the query
         start_time = time.time()
@@ -74,8 +105,8 @@ class ClickHouseLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='execute_query',
-            name='execute_query',
+            request_type='total_progress',
+            name='total_progress',
             response_time=processing_time,
             response_length=0,
         )
@@ -91,9 +122,8 @@ class StagesShape(LoadTestShape):
 
     stages = [
         {'duration': 20, 'users': 10, 'spawn_rate': 1},
-        {'duration': 40, 'users': 100, 'spawn_rate': 10},
-        {'duration': 60, 'users': 1000, 'spawn_rate': 100},
-        {'duration': 100, 'users': 1500, 'spawn_rate': 100},
+        {'duration': 40, 'users': 100, 'spawn_rate': 5},
+        {'duration': 120, 'users': 500, 'spawn_rate': 10},
     ]
 
     def tick(self):
