@@ -3,8 +3,9 @@ from typing import Optional
 import requests
 import uuid
 import random
-# from contextlib import closing
+from datetime import datetime, timedelta
 
+from jose import jwt
 import pytest
 
 from .settings import test_settings
@@ -26,23 +27,6 @@ def post_request():
 
 
 @pytest.fixture
-def do_test_user_login(post_request):
-    def _do_test_user_login():
-        data = {
-                'email': TEST_USER_EMAIL,
-                'password': TEST_USER_PASSWORD,
-            }
-        response = post_request(
-            test_settings.auth_service_url,
-            '/api/v1/user/login',
-            data,
-        )
-        return response
-
-    return _do_test_user_login
-
-
-@pytest.fixture
 def generate_movie_id():
     return str(uuid.uuid4())
 
@@ -52,29 +36,18 @@ def generate_timestamp():
     return random.randint(0, 999999)
 
 
-# @pytest.fixture
-# def do_test_user_register(post_request):
-#     def _do_test_user_register():
-#         data = {
-#                 'email': TEST_USER_EMAIL,
-#                 'password': TEST_USER_PASSWORD,
-#                 'login': TEST_USER_LOGIN,
-#             }
-#         response = post_request(
-#             test_settings.auth_service_url + '/api/v1/login',
-#             data,
-#         )
-#         return response
+@pytest.fixture
+def token():
+    to_encode = {}
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    to_encode.update({"permissions": ['subscriber']})
+    to_encode.update({"sub": str(uuid.uuid4())})
+    encoded_jwt = jwt.encode(to_encode, test_settings.jwt_private_key, algorithm='RS256')
 
-#     return _do_test_user_register
+    return encoded_jwt
 
 
-# @pytest.fixture(scope='module', autouse=True)
-# def cleanup(request):
-#     """Truncate cascade the auth.user table after tests per module."""
-
-#     def _cleanup():
-#         with closing(conn.cursor()) as cursor:
-#             cursor.execute('TRUNCATE TABLE auth.user CASCADE')
-
-#     request.addfinalizer(_cleanup)
+@pytest.fixture
+def generate_cookies(token):
+    return {"access_token_cookie": token}

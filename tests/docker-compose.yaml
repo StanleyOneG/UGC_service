@@ -43,7 +43,7 @@ services:
     env_file:
       - ./.env
     depends_on:
-      redis_ugc_test:
+      ugc_redis_test:
         condition: service_started
     expose:
       - 8000
@@ -61,17 +61,17 @@ services:
       retries: 5
       start_period: 80s
 
-  redis_ugc_test:
+  ugc_redis_test:
     image: redis:latest
     volumes:
-      - redis_ugc_data_test:/data:rw
+      - ugc_redis_data_test:/data:rw
     command: >
       --save 60 1
     expose:
       - 6379
     ports:
       - 6379:6379
-    container_name: redis_ugc_test
+    container_name: ugc_redis_test
     networks:
       - microservice-network
 
@@ -82,15 +82,17 @@ services:
     env_file:
       - ./.env
     depends_on:
-      redis_ugc_test:
+      ugc_redis_test:
         condition: service_started
       ugc_api_test:
         condition: service_healthy
+      # - ugc_broker_test
     networks:
       - microservice-network
 
 volumes:
-  redis_ugc_data_test:
+  ugc_redis_data_test:
+
 networks:
   microservice-network:
     name: microservice-network

@@ -5,12 +5,11 @@ from ..settings import test_settings
 
 
 def test_set_progress(post_request,
-                      do_test_user_login,
                       generate_movie_id,
-                      generate_timestamp):
+                      generate_timestamp,
+                      generate_cookies):
     """Set movie watch progress"""
-    r = do_test_user_login()
-    cookies = r.cookies
+    cookies = generate_cookies
     data = {
         "movie_id": generate_movie_id,
         "timestamp": generate_timestamp
@@ -22,13 +21,12 @@ def test_set_progress(post_request,
     assert result.status_code == HTTPStatus.OK
 
 
-def test_get_progress(do_test_user_login,
-                      post_request,
+def test_get_progress(post_request,
                       generate_movie_id,
-                      generate_timestamp):
+                      generate_timestamp,
+                      generate_cookies):
     """Get movies watch progress"""
-    r = do_test_user_login()
-    cookies = r.cookies
+    cookies = generate_cookies
     data = {
         "movie_id": generate_movie_id,
         "timestamp": generate_timestamp
