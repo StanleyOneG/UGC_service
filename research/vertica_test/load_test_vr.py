@@ -33,24 +33,14 @@ class VerticaLoadTest(User):
     @events.test_start.add_listener
     def on_test_start(environment, **kwargs):
         """Event listener for test start event."""
-        logger.info('CLIENT CREATED')
+        logger.info('TEST STARTED')
 
-        # Generate test data
-        data = [(x,) for x in range(1_000_000)]  # Convert generator to a list
-
-        # Insert testing data into staging table
-        with vertica_python.connect(**connection_info) as connection:
-            cursor = connection.cursor()
-            cursor.execute('CREATE TABLE if not exists test (x INT);')
-            cursor.executemany('INSERT INTO test (x) VALUES (%s)', data)
-            logger.info('DATA INSERTED INTO TEST TABLE')
-            cursor.execute(f"ALTER DATABASE {connection_info['database']} SET MaxClientSessions = 1000;")
-
-    @task
-    def execute_qery_max(self):
+    @task(2)
+    def find_movie_with_longest_progress_time(self):
         """Execute a sample Vertica query and gather statistics."""
+        # Prepare SELECT query
+        query = 'SELECT movie_id, progress_time FROM test WHERE progress_time = (SELECT MAX(progress_time) FROM test);'
         vertica = vertica_python.connect(**connection_info)
-        query = 'SELECT * FROM test LIMIT 1000;'
 
         # Execute the query
         start_time = time.time()
@@ -64,18 +54,19 @@ class VerticaLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='execute_qery_max',
-            name='execute_qery_max',
+            request_type='movie_with_longest_progress_time',
+            name='movie_with_longest_progress_time',
             response_time=processing_time,
             response_length=0,
             context=None,
         )
 
-    @task(3)
-    def execute_qery_min(self):
+    @task(1)
+    def average_progress_time(self):
         """Execute a sample Vertica query and gather statistics."""
+        # Prepare SELECT query
+        query = 'SELECT AVG(progress_time) FROM test;'
         vertica = vertica_python.connect(**connection_info)
-        query = 'SELECT * FROM test LIMIT 100;'
 
         # Execute the query
         start_time = time.time()
@@ -88,8 +79,70 @@ class VerticaLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='execute_qery_min',
-            name='execute_qery_min',
+            request_type='average_progress_time',
+            name='average_progress_time',
+            response_time=processing_time,
+            response_length=0,
+            context=None,
+        )
+
+    @task(1)
+    def find_progress_by_range(self):
+        """Execute a sample Vertica query and gather statistics."""
+        # Prepare SELECT query
+        query = '''
+            SELECT
+                CASE
+                    WHEN progress_time <= 60000 THEN '0-60 seconds'
+                    WHEN progress_time <= 300000 THEN '1-5 minutes'
+                    WHEN progress_time <= 1800000 THEN '5-30 minutes'
+                    ELSE 'More than 30 minutes'
+                END AS duration_range,
+                COUNT(*) AS count
+            FROM test
+            GROUP BY duration_range;
+        '''
+
+        vertica = vertica_python.connect(**connection_info)
+
+        # Execute the query
+        start_time = time.time()
+
+        with vertica as connection:
+            cursor = connection.cursor()
+            cursor.execute(query)
+
+        processing_time = int((time.time() - start_time) * 1000)
+
+        # Gather statistics
+        events.request.fire(
+            request_type='progress_by_range',
+            name='progress_by_range',
+            response_time=processing_time,
+            response_length=0,
+            context=None,
+        )
+
+    @task(3)
+    def calculate_total_progress(self):
+        """Execute a sample Vertica query and gather statistics."""
+        # Prepare SELECT query
+        query = 'SELECT SUM(progress_time) FROM test'
+        vertica = vertica_python.connect(**connection_info)
+
+        # Execute the query
+        start_time = time.time()
+
+        with vertica as connection:
+            cursor = connection.cursor()
+            cursor.execute(query)
+
+        processing_time = int((time.time() - start_time) * 1000)
+
+        # Gather statistics
+        events.request.fire(
+            request_type='total_progress',
+            name='total_progress',
             response_time=processing_time,
             response_length=0,
             context=None,
@@ -98,10 +151,6 @@ class VerticaLoadTest(User):
     @events.test_stop.add_listener
     def on_test_stop(environment, **kwargs):
         """Event listener for test stop event."""
-        vertica = vertica_python.connect(**connection_info)
-        with vertica as connection:
-            cursor = connection.cursor()
-            cursor.execute('DROP TABLE IF EXISTS test')
         logger.info('TEST STOPPED')
 
 
@@ -110,9 +159,8 @@ class StagesShape(LoadTestShape):
 
     stages = [
         {'duration': 20, 'users': 10, 'spawn_rate': 1},
-        {'duration': 40, 'users': 100, 'spawn_rate': 10},
-        {'duration': 60, 'users': 1000, 'spawn_rate': 100},
-        {'duration': 100, 'users': 1500, 'spawn_rate': 100},
+        {'duration': 40, 'users': 100, 'spawn_rate': 5},
+        {'duration': 120, 'users': 500, 'spawn_rate': 10},
     ]
 
     def tick(self):
