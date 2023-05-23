@@ -1,0 +1,23 @@
+version: "3.8"
+services:
+
+  vertica:
+    image: jbfavre/vertica:latest
+    hostname: vertica
+    container_name: vertica
+    ports:
+      - 5433:5433
+
+  locust_vr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: locust
+    volumes:
+      - ./load_test_vr.py:/app/load_test_vr.py
+      - ./load_test_insert.py:/app/load_test_insert.py
+    tty: true
+    depends_on:
+      - vertica
+    ports:
+      - 8089:8089

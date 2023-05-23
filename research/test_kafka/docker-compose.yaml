@@ -6,13 +6,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: locust
+    volumes:
+      - ./load_test.py:/app/load_test.py
+      - ./config.py:/app/config.py
+    tty: true
     depends_on:
       control-center:
         condition: service_healthy
     ports:
       - 8089:8089
-    # networks:
-    #   - kafka
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -22,8 +24,6 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    # networks:
-    # - kafka
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.4.0
@@ -37,14 +37,11 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-1:29092'
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-    # networks:
-    #   - kafka
 
   kafka-1:
     image: confluentinc/cp-server:7.4.0
     container_name: kafka-1
     hostname: kafka-1
-    restart: always
     depends_on:
       - zookeeper
     environment:
@@ -52,7 +49,6 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:29092,PLAINTEXT_HOST://kafka-1:9092
-      # KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
@@ -62,16 +58,10 @@ services:
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: 'kafka-1'
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      # CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:29092
-      # CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
-      # CONFLUENT_METRICS_ENABLE: 'true'
-      # CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
     ports:
       - 9101:9101
       - 9092:9092
       - 8091:8091
-    # networks:
-    # - kafka
 
   connect:
     image: confluentinc/cp-kafka-connect-base:7.4.0
@@ -128,69 +118,3 @@ services:
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       PORT: 9021
-    # networks:
-    #   - kafka
-    # networks:
-    #   - kafka
-
-  # rest-proxy:
-  #   image: confluentinc/cp-kafka-rest:7.4.0
-  #   depends_on:
-  #     - kafka-1
-  #     - schema-registry
-  #   ports:
-  #     - 8082:8082
-  #   hostname: rest-proxy
-  #   container_name: rest-proxy
-  #   environment:
-  #     KAFKA_REST_HOST_NAME: rest-proxy
-  #     KAFKA_REST_BOOTSTRAP_SERVERS: 'kafka-1:29092'
-  #     KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
-  #     KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
-  #   networks:
-  #     - kafka
-
-  # ksqldb-server:
-  #   image: confluentinc/cp-ksqldb-server:7.4.0
-  #   hostname: ksqldb-server
-  #   container_name: ksqldb-server
-  #   depends_on:
-  #     - kafka-1
-  #     - connect
-  #   ports:
-  #     - "8088:8088"
-  #   environment:
-  #     KSQL_CONFIG_DIR: "/etc/ksql"
-  #     KSQL_BOOTSTRAP_SERVERS: "kafka-1:29092"
-  #     KSQL_HOST_NAME: ksqldb-server
-  #     KSQL_LISTENERS: "http://0.0.0.0:8088"
-  #     KSQL_CACHE_MAX_BYTES_BUFFERING: 0
-  #     KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-  #     KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-  #     KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-  #     KSQL_KSQL_CONNECT_URL: "http://connect:8083"
-  #     KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR: 1
-  #     KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: 'true'
-  #     KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: 'true'
-  #   networks:
-  #     - kafka
-
-  # ksqldb-cli:
-  #   image: confluentinc/cp-ksqldb-cli:7.4.0
-  #   container_name: ksqldb-cli
-  #   depends_on:
-  #     - kafka-1
-  #     - connect
-  #     - ksqldb-server
-  #   entrypoint: /bin/sh
-  #   tty: true
-  #   networks:
-  #     - kafka
-
-
-# volumes:
-#   data_kafka-1:
-
-# networks:
-#   kafka:
-#     name: kafka

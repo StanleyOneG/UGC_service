@@ -5,7 +5,6 @@ ENV \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-COPY requirements.txt ./
 
 RUN \
     mkdir -p /app \
@@ -13,7 +12,7 @@ RUN \
     && chown web:web -R /app \
     && python -m pip install --upgrade pip \
     && pip install --upgrade wheel \
-    && python3 -m pip install -r requirements.txt
+    && python3 -m pip install vertica-python locust==2.15.1
 
 EXPOSE 8089
 

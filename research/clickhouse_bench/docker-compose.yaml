@@ -3,9 +3,12 @@ services:
 
   clickhouse:
     image: clickhouse/clickhouse-server
-    restart: always
     container_name: clickhouse
     hostname: clickhouse
+    volumes:
+      - ./node1:/etc/clickhouse-server
+    # environment:
+    #   - CLICKHOUSE_MAX_CONCURRENT_QUERIES=1000
     ports:
       - "8123:8123"
       - "9000:9000"
@@ -14,9 +17,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
     container_name: locust
     hostname: locust
+    volumes:
+      - ./load_test_ch.py:/app/load_test_ch.py
+      - ./load_test_insert.py:/app/load_test_insert.py
+      - ./config:/app/config
+    tty: true
     ports:
       - 8089:8089
     depends_on:

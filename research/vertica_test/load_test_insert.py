@@ -4,7 +4,7 @@ import time
 import uuid
 
 import vertica_python
-from locust import User, between, events, task
+from locust import LoadTestShape, User, between, events, task
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -79,6 +79,14 @@ class VerticaLoadTest(User):
 
         logger.info('TEST STOPPED')
 
+
+class StagesShape(LoadTestShape):
+    """Load test shape class."""
+
+    stages = [
+        {'duration': 100, 'users': 5, 'spawn_rate': 1},
+    ]
+
     def tick(self):
         """Return the tick data."""
         run_time = self.get_run_time()
@@ -87,7 +95,3 @@ class VerticaLoadTest(User):
                 tick_data = (stage['users'], stage['spawn_rate'])
                 return tick_data
         return None
-
-
-if __name__ == '__main__':
-    VerticaLoadTest().run()
