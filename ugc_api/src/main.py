@@ -22,7 +22,6 @@ async def lifespan(app: FastAPI):
     yield
     await redis.redis.close()
     await kafka.producer.close()
-    
 
 app = FastAPI(
     title=config.PROJECT_NAME,
