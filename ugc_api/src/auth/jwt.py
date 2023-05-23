@@ -57,8 +57,7 @@ def check_auth(endpoint_permission):
                     kwargs['user_id'] = user_id
                     value = await func(*args, **kwargs)
                     return value
-                else:
-                    raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='You have no permission')
+                raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='You have no permission')
             raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token expired')
 
         return wrapper
