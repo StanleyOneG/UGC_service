@@ -14,7 +14,7 @@ RUN \
     && chown tester:tester -R /tests \
     && pip install --upgrade wheel \
     && python3 -m pip install --upgrade pip \
-    && python3 -m pip install -r ./tests/requirements.txt
+    && python3 -m pip install -r ./tests/requirements.txt --no-cache-dir
 
 
 WORKDIR /tests/functional
