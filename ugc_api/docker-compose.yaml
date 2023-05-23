@@ -12,8 +12,6 @@ services:
     expose:
       - 8000
     container_name: ugc_api
-    ports:
-      - "8000:8000"
     volumes:
       - ./src:/ugc_api:ro
     networks:
@@ -26,8 +24,6 @@ services:
       --save 60 1
     expose:
       - 6379
-    ports:
-      - 6379:6379
     container_name: redis_ugc
     networks:
       - microservice-network
