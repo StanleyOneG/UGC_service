@@ -3,6 +3,7 @@
 import logging
 import random
 import time
+import uuid
 
 from config import get_kafka_producer
 from locust import HttpUser, LoadTestShape, between, events, task
@@ -32,7 +33,7 @@ class KafkaLoadTest(HttpUser):
         """Produce messages to Kafka and gather statistics."""
         global producer
         # Produce messages to Kafka
-        message = str(random.randint(1, 10000))
+        message = '-'.join([str(uuid.uuid4()), str(random.randint(1, 10000))])
         request_time_start = time.time()
         producer.produce(topic, value=message.encode('utf-8'))
 
