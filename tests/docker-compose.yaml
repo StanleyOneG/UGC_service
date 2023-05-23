@@ -35,6 +35,12 @@ services:
     - ugc_zookeeper_test
     networks:
       - microservice-network
+    healthcheck:
+      test: nc -z ugc_broker_test 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   ugc_api_test:
     build:
@@ -45,6 +51,8 @@ services:
     depends_on:
       ugc_redis_test:
         condition: service_started
+      ugc_broker_test:
+        condition: service_healthy
     expose:
       - 8000
     container_name: ugc_api_test
@@ -86,7 +94,9 @@ services:
         condition: service_started
       ugc_api_test:
         condition: service_healthy
-      # - ugc_broker_test
+      ugc_broker_test:
+        condition: service_healthy
+
     networks:
       - microservice-network
 

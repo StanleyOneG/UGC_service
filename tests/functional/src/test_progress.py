@@ -1,7 +1,16 @@
 import json
 from http import HTTPStatus
+from functools import lru_cache
 
-from ..settings import test_settings
+from .. import settings
+
+
+@lru_cache
+def get_test_settings():
+    return settings.TestSettings()
+
+
+test_settings = get_test_settings()
 
 
 def test_set_progress(post_request, generate_movie_id, generate_timestamp, generate_cookies):

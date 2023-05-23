@@ -7,11 +7,20 @@ import logging
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
+from functools import lru_cache
 
-from core.config import JWT_PUBLIC_KEY as public_key
 from fastapi import HTTPException
 from jose import jwt
 
+from core import config
+
+
+@lru_cache
+def get_settings():
+    return config.Settings()
+
+
+settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +58,7 @@ def check_auth(endpoint_permission):
             token = request.cookies.get('access_token_cookie')
             if not token:
                 raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token is missing')
-            decoded_token = jwt.decode(token, public_key, algorithms=['RS256'])
+            decoded_token = jwt.decode(token, settings.jwt.public_key, algorithms=['RS256'])
             if decoded_token['exp'] > datetime.now().timestamp():
                 permissions = decoded_token['permissions']
                 user_id = decoded_token['sub']

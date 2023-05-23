@@ -1,32 +1,44 @@
 """UGC API main."""
 
+from functools import lru_cache
+from contextlib import asynccontextmanager
+
 import uvicorn
-from api.v1 import progress
-from core import config
-from db import redis
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
+
 from aiokafka import AIOKafkaProducer
+from api.v1 import progress
+from db import redis
 from services import kafka
-from contextlib import asynccontextmanager
+from core import config
+
+
+@lru_cache
+def get_settings():
+    return config.Settings()
+
+
+settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Execute on application startup and shutdown"""
-    redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+    redis.redis = Redis(host=settings.redis.host, port=settings.redis.port)
     kafka.producer = AIOKafkaProducer(
-        bootstrap_servers=[f'{config.KAFKA_HOST}:{config.KAFKA_PORT}'])
+        bootstrap_servers=[f'{settings.kafka.host}:{settings.kafka.port}'],
+        api_version='0.10.2')
     await kafka.producer.start()
     yield
     await redis.redis.close()
-    await kafka.producer.close()
+    await kafka.producer.stop()
 
 app = FastAPI(
-    title=config.PROJECT_NAME,
-    description=config.PROJECT_DESCRIPTION,
-    version=config.PROJECT_VERSION,
+    title=settings.project.name,
+    description=settings.project.description,
+    version=settings.project.version,
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,

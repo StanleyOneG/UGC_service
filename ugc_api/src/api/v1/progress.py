@@ -7,13 +7,22 @@ import json
 import logging
 import uuid
 from http import HTTPStatus
+from functools import lru_cache
+
+from fastapi import APIRouter, Request
 
 from auth.jwt import check_auth
-from core.config import KAFKA_TOPIC
+from core import config
 from db.redis import get_redis
-from fastapi import APIRouter, Request
 from services.kafka import get_producer
 
+
+@lru_cache
+def get_settings():
+    return config.Settings()
+
+
+settings = get_settings()
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
@@ -40,12 +49,11 @@ async def set_progress(request: Request, user_id=None):
     if not movie_id:
         return HTTPStatus.BAD_REQUEST, {'msg': 'movie_id not present'}
 
-    topic = KAFKA_TOPIC
     value = {'id': str(uuid.uuid4()), 'user_movie_id': '_'.join([str(user_id), str(movie_id)]), 'timestamp': timestamp}
     encoded_value = json.dumps(value).encode()
 
     producer = get_producer()
-    await producer.send(topic=topic, value=encoded_value)
+    await producer.send(topic=settings.kafka.topic, value=encoded_value)
 
     redis = get_redis()
     await redis.set(f'{user_id}:{movie_id}', str(timestamp))

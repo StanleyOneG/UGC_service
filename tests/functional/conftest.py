@@ -3,16 +3,25 @@ import random
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional
+from functools import lru_cache
 
 import pytest
 import requests
 from jose import jwt
 
-from .settings import test_settings
+from . import settings
 
 TEST_USER_EMAIL = 'admin@admin.com'
 TEST_USER_PASSWORD = 'admin'
 TEST_USER_LOGIN = 'admin'
+
+
+@lru_cache
+def get_test_settings():
+    return settings.TestSettings()
+
+
+test_settings = get_test_settings()
 
 
 @pytest.fixture
