@@ -28,7 +28,7 @@ class EventStoreLoadTest(HttpUser):
 
         url = f'/streams/{stream_name}'
 
-        message = str(random.randint(1, 1000000))
+        message = '-'.join([str(uuid.uuid4()), str(random.randint(1, 1000000))])
 
         # random number of 8 digits for if
         event_id = str(uuid.uuid4())
