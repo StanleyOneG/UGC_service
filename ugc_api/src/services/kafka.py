@@ -4,8 +4,9 @@ Kafka service.
 This module provides consumer and producer for Kafka messaging system.
 """
 
+from core.config import KAFKA_HOST, KAFKA_PORT, KAFKA_TOPIC
+
 from kafka import KafkaConsumer, KafkaProducer
-from core.config import KAFKA_TOPIC, KAFKA_HOST, KAFKA_PORT
 
 consumer = KafkaConsumer(
     KAFKA_TOPIC,
@@ -15,5 +16,7 @@ consumer = KafkaConsumer(
     api_version=(0, 10, 2),
 )
 
-producer = KafkaProducer(bootstrap_servers=[f'{KAFKA_HOST}:{KAFKA_PORT}'],
-                         api_version=(0, 10, 2),)
+producer = KafkaProducer(
+    bootstrap_servers=[f'{KAFKA_HOST}:{KAFKA_PORT}'],
+    api_version=(0, 10, 2),
+)

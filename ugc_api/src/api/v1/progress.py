@@ -3,17 +3,16 @@ Progress API.
 
 This module defines API endpoints related to progress tracking.
 """
-import logging
-from http import HTTPStatus
-import uuid
 import json
+import logging
+import uuid
+from http import HTTPStatus
 
-from fastapi import APIRouter, Request
-
-from services.kafka import producer
 from auth.jwt import check_auth
-from db.redis import get_redis
 from core.config import KAFKA_TOPIC
+from db.redis import get_redis
+from fastapi import APIRouter, Request
+from services.kafka import producer
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -35,18 +34,14 @@ async def set_progress(request: Request, user_id=None):
     timestamp = data.get('timestamp')
     movie_id = data.get('movie_id')
     if not timestamp:
-        return HTTPStatus.BAD_REQUEST, {"msg": "timestamp not present"}
+        return HTTPStatus.BAD_REQUEST, {'msg': 'timestamp not present'}
     if not user_id:
-        return HTTPStatus.BAD_REQUEST, {"msg": "user_id not present"}
+        return HTTPStatus.BAD_REQUEST, {'msg': 'user_id not present'}
     if not movie_id:
-        return HTTPStatus.BAD_REQUEST, {"msg": "movie_id not present"}
+        return HTTPStatus.BAD_REQUEST, {'msg': 'movie_id not present'}
 
     topic = KAFKA_TOPIC
-    value = {
-        "id": str(uuid.uuid4()),
-        "user_movie_id": '_'.join([str(user_id), str(movie_id)]),
-        "timestamp": timestamp
-    }
+    value = {'id': str(uuid.uuid4()), 'user_movie_id': '_'.join([str(user_id), str(movie_id)]), 'timestamp': timestamp}
     encoded_value = json.dumps(value).encode()
 
     producer.send(
@@ -69,7 +64,6 @@ async def get_progress(request: Request, user_id=None):
     This function gets data from Redis
     to get the progress.
     """
-
     # Fetch the latest records
     data = await request.json()
     movie_ids = data['movie_ids']

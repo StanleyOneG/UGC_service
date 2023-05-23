@@ -21,7 +21,7 @@ repos:
   rev: 1.7.5
   hooks:
     - id: bandit
-      exclude: (load_test*)
+      exclude: (load_test*|tests/)
 
 - repo: https://github.com/ambv/black
   rev: 22.3.0
