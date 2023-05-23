@@ -7,6 +7,16 @@ from db import redis
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Execute on application startup and shutdown"""
+    redis.redis = await Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+    yield
+    await redis.redis.close()
+    
 
 app = FastAPI(
     title=config.PROJECT_NAME,
@@ -15,19 +25,8 @@ app = FastAPI(
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,
+    lifespan=lifespan
 )
-
-
-@app.on_event('startup')
-async def startup():
-    """Execute on application startup."""
-    redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
-
-
-@app.on_event('shutdown')
-async def shutdown():
-    """Execute on application shutdown."""
-    await redis.redis.close()
 
 
 app.include_router(progress.router, prefix='/api/v1', tags=['progress'])
