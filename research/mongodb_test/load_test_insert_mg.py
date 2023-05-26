@@ -34,7 +34,6 @@ class MongoLoadTest(User):
         """Event listener for user start event."""
         self.client = pymongo.MongoClient(
             host='mongodb://mongors1n1:27017',
-            serverSelectionTimeoutMS=5000,
         )
 
         self.ratings = self.client.test_database.ratings
@@ -145,7 +144,7 @@ class MongoLoadTest(User):
             host='mongodb://mongors1n1:27017',
             serverSelectionTimeoutMS=5000,
         )
-        client.drop_database['test_database']
+        client.drop_database('test_database')
         client.close()
         logger.info('TEST DATABASE DROPPED')
         logger.info('TEST STOPED')
@@ -157,8 +156,8 @@ class StagesShape(LoadTestShape):
     stages = [
         {'duration': 20, 'users': 10, 'spawn_rate': 10},
         {'duration': 40, 'users': 100, 'spawn_rate': 10},
-        {'duration': 60, 'users': 1000, 'spawn_rate': 50},
-        {'duration': 80, 'users': 1500, 'spawn_rate': 100},
+        {'duration': 60, 'users': 500, 'spawn_rate': 50},
+        {'duration': 100, 'users': 1000, 'spawn_rate': 50},
     ]
 
     def tick(self):
