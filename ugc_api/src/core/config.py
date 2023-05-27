@@ -1,5 +1,7 @@
 """Config."""
 
+from functools import lru_cache
+
 from pydantic import BaseSettings, Field
 
 
@@ -40,3 +42,13 @@ class Settings(BaseSettings):
     project = ProjectSettings()
     jwt = JwtSettings()
     kafka = KafkaSettings()
+
+
+@lru_cache
+def get_settings():
+    """Environment configuration for application.
+
+    Returns:
+        Settings: environment configuration
+    """
+    return Settings()

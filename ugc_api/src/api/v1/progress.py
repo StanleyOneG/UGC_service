@@ -7,22 +7,14 @@ import json
 import logging
 import uuid
 from http import HTTPStatus
-from functools import lru_cache
 
 from fastapi import APIRouter, Request, Depends
-
 from auth.jwt import check_auth
-from core import config
+from core.config import get_settings
 from redis.asyncio import Redis
 from db.redis import get_redis
 from aiokafka import AIOKafkaProducer
 from services.kafka import get_producer
-
-
-@lru_cache
-def get_settings():
-    return config.Settings()
-
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -34,12 +26,19 @@ router = APIRouter()
 async def set_progress(request: Request,
                        user_id=None,
                        redis: Redis = Depends(get_redis),
-                       producer: AIOKafkaProducer = Depends(get_producer)):
+                       producer: AIOKafkaProducer = Depends(get_producer),
+                       ):
     """
     Set the progress.
 
     This function sends a message to Kafka topic and Redis
     to set the progress.
+
+    Args:
+        request (Request): Request instance
+        user_id (str): User's id
+        redis (Redis): Redis instance
+        producer (AIOKafkaProducer): AIOKafkaProducer instance
 
     Returns:
         HTTPStatus: HTTP status code 200 (OK).
@@ -65,14 +64,24 @@ async def set_progress(request: Request,
 
 @router.post('/get_progress')
 @check_auth(endpoint_permission='subscriber')
-async def get_progress(request: Request,
-                       user_id=None,
-                       redis: Redis = Depends(get_redis)):
+async def get_progress(
+        request: Request,
+        user_id=None, redis:
+        Redis = Depends(get_redis),
+):
     """
     Get the progress.
 
     This function gets data from Redis
     to get the progress.
+
+    Args:
+        request: (Request): Request instance
+        user_id: (str): User's id
+        redis (Redis): Redis instance
+
+    Returns:
+        List of timecodes for movies
     """
     # Fetch the latest records
     data = await request.json()

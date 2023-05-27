@@ -1,6 +1,6 @@
 """Redis connection."""
 
-from typing import Optional, Any
+from typing import Optional
 
 from redis.asyncio import Redis
 

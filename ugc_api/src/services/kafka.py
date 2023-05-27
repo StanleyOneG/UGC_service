@@ -16,6 +16,6 @@ def get_producer() -> AIOKafkaProducer:
     Retrieve the KafkaProducer instance.
 
     Returns:
-        KafkaProducer: The Kafka instance.
+        AIOKafkaProducer: The Kafka instance.
     """
     return producer

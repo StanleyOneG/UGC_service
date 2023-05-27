@@ -7,18 +7,10 @@ import logging
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
-from functools import lru_cache
 
 from fastapi import HTTPException
 from jose import jwt
-
-from core import config
-
-
-@lru_cache
-def get_settings():
-    return config.Settings()
-
+from core.config import get_settings
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -35,9 +27,7 @@ def check_permission(user_permissions, endpoint_permission):
     Returns:
         bool: True if `endpoint_permission` exists in `user_permissions`, False otherwise.
     """
-    if endpoint_permission in user_permissions:
-        return True
-    return False
+    return endpoint_permission in user_permissions
 
 
 def check_auth(endpoint_permission):
@@ -64,8 +54,7 @@ def check_auth(endpoint_permission):
                 user_id = decoded_token['sub']
                 if check_permission(permissions, endpoint_permission):
                     kwargs['user_id'] = user_id
-                    value = await func(*args, **kwargs)
-                    return value
+                    return await func(*args, **kwargs)
                 raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='You have no permission')
             raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token expired')
 
