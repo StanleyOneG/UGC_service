@@ -27,7 +27,7 @@ jobs:
         pip install wemake-python-styleguide mypy
 
     - name: Run mypy
-      run: mypy --ignore-missing-imports ygc_api/src
+      run: mypy --ignore-missing-imports ugc_api/src
 
     - name: Run wps
       run: flake8 .
