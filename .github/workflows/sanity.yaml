@@ -1,0 +1,42 @@
+name: Check on wps, mypy, python compatibility
+on:
+  push:
+    branches: ["development", "main"]
+  pull_request:
+    branches: ["development", "main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-versions: [3.7, 3.8, 3.9]
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{matrix.python-version}}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install wemake-python-styleguide mypy
+
+    - name: Run mypy
+      run: mypy --ignore-missing-imports ygc_api/src
+
+    - name: Run wps
+      run: flake8 .
+
+    - name: Send telegram msg on success
+      if: success()
+      env:
+        API_TOKEN: ${{ secrets.TELEGRAM_API_TOKEN }}
+        CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: |
+        pip install python-telegram-bot
+        python .github/utils/telegram.py ${API_TOKEN} ${CHAT_ID}
