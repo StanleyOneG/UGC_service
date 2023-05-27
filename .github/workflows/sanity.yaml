@@ -39,4 +39,4 @@ jobs:
         CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
         pip install python-telegram-bot
-        python .github/utils/telegram.py ${API_TOKEN} ${CHAT_ID}
+        python .github/utils/tg.py ${API_TOKEN} ${CHAT_ID}
