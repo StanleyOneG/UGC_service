@@ -27,9 +27,7 @@ jobs:
         pip install wemake-python-styleguide mypy
 
     - name: Run mypy
-      run: |
-#        mypy --install-types
-        mypy ugc_api/src
+      run: mypy ugc_api/src
 
     - name: Run wps
       run: flake8 .
