@@ -16,7 +16,7 @@ settings = get_settings()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> None:
+async def lifespan(app: FastAPI):
     """Execute on application startup and shutdown.
 
     Args:
