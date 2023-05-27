@@ -32,11 +32,11 @@ jobs:
     - name: Run wps
       run: flake8 .
 
-#    - name: Send telegram msg on success
-#      if: success()
-#      env:
-#        API_TOKEN: ${{ secrets.TELEGRAM_API_TOKEN }}
-#        CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-#      run: |
-#        pip install python-telegram-bot
-#        python .github/utils/telegram.py ${API_TOKEN} ${CHAT_ID}
+    - name: Send telegram msg on success
+      if: success()
+      env:
+        API_TOKEN: ${{ secrets.TELEGRAM_API_TOKEN }}
+        CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: |
+        pip install python-telegram-bot
+        python .github/utils/telegram.py ${API_TOKEN} ${CHAT_ID}
