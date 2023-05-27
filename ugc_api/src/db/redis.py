@@ -1,13 +1,13 @@
 """Redis connection."""
 
-from typing import Optional
+from typing import Optional, Any
 
 from redis.asyncio import Redis
 
 redis: Optional[Redis] = None
 
 
-def get_redis() -> Redis:
+def get_redis() -> Redis[Any]:
     """
     Retrieve the Redis instance.
 
