@@ -7,7 +7,7 @@ from redis.asyncio import Redis
 redis: Optional[Redis] = None
 
 
-def get_redis() -> Redis[Any]:
+def get_redis() -> Optional[Redis]:
     """
     Retrieve the Redis instance.
 
