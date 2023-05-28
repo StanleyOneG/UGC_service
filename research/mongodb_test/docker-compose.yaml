@@ -9,6 +9,7 @@ services:
     hostname: locust_mongo
     volumes:
       - ./load_test_insert_mg.py:/app/load_test_insert_mg.py
+      - ./load_test_query_mg.py:/app/load_test_query_mg.py
       # - ./load_test_insert.py:/app/load_test_insert.py
       # - ./config:/app/config
     tty: true

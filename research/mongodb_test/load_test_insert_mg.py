@@ -16,8 +16,12 @@ logger = logging.getLogger(__name__)
 fake = Faker(['en_US'])
 Faker.seed(9)
 
-movies_id = [uuid.uuid4() for _ in range(1, 1_000_000)]
+random.seed(9)
+
+movies_id = [uuid.uuid4() for _ in range(1, 500_000)]
 users_id = [uuid.uuid4() for _ in range(1, 1_000_000)]
+
+skips = 0
 
 
 class MongoLoadTest(User):
@@ -25,109 +29,124 @@ class MongoLoadTest(User):
 
     wait_time = between(1, 3)
 
+    def __init__(self, *args, **kwargs):
+        """Init method."""
+        super().__init__(*args, **kwargs)
+
+        self.client = pymongo.MongoClient(
+            host='mongodb://mongos1,mongos2',
+        )
+
+        self.db = self.client.test_database
+        self.ugc_doc = self.db.ugc_doc
+
+        self.ugc_doc.create_index([('film_id', pymongo.ASCENDING)], unique=True)
+        self.ugc_doc.create_index([('user_id', pymongo.ASCENDING)], unique=True)
+
     @events.test_start.add_listener
     def on_test_start(environment, **kwargs):
         """Create MongoDB client and collection."""
         logger.info('TEST STARTED.')
 
-    def on_start(self):
-        """Event listener for user start event."""
-        self.client = pymongo.MongoClient(
-            host='mongodb://mongors1n1:27017',
-        )
-
-        self.ratings = self.client.test_database.ratings
-        self.bookmarks = self.client.test_database.bookmarks
-        self.reviews = self.client.test_database.reviews
-
-    @task(7)
-    def insert_rating_data(self):
+    @task(3)
+    def insert_user_data(self):
         """Insert user's like in likes collection."""
         start_time = time.time()
 
-        self.ratings.insert_one(
-            {
-                'film_id': Binary.from_uuid(movies_id[random.randint(0, 999_999)]),
-                'user_id': Binary.from_uuid(users_id[random.randint(0, 999_999)]),
-                'rating': random.randint(1, 10),
-            }
-        )
+        try:
+            self.ugc_doc.insert_one(
+                {
+                    'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)]),
+                    'user_id': Binary.from_uuid(users_id[random.randint(0, 999_999)]),
+                    'rating': random.randint(1, 10),
+                    'bookmark': False,
+                    'review': {
+                        'id': Binary.from_uuid(uuid.uuid4()),
+                        'review_body': fake.paragraph(nb_sentences=5, variable_nb_sentences=True),
+                        'review_date': int(time.time()),
+                        'likes': [Binary.from_uuid(users_id[random.randint(0, 999_999)])],
+                        'dislikes': [Binary.from_uuid(users_id[random.randint(0, 999_999)])],
+                    },
+                }
+            )
+
+        except pymongo.errors.DuplicateKeyError:
+            pass
+            global skips
+            skips += 1
 
         processing_time = int((time.time() - start_time) * 1000)
 
         # Gather statistics
         events.request.fire(
-            request_type='insert_rating_data',
-            name='insert_rating_data',
+            request_type='insert_user_data',
+            name='insert_user_data',
             response_time=processing_time,
             response_length=0,
             context=None,
         )
 
-    @task(10)
-    def insert_bookmark_data(self):
-        """Insert user's bookmark in likes collection."""
+    @task
+    def update_movie_rating(self):
+        """Update movie data."""
+        filter_query = {'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)])}
+
+        update_query = {'$set': {'rating': random.randint(1, 10)}}
+
         start_time = time.time()
 
-        self.bookmarks.insert_one(
-            {
-                'film_id': Binary.from_uuid(movies_id[random.randint(0, 999_999)]),
-                'user_id': Binary.from_uuid(users_id[random.randint(0, 999_999)]),
-                'bookmark': True,
-            }
-        )
+        self.ugc_doc.update_one(filter_query, update_query)
 
         processing_time = int((time.time() - start_time) * 1000)
 
         # Gather statistics
         events.request.fire(
-            request_type='insert_bookmark_data',
-            name='insert_bookmark_data',
+            request_type='update_movie_rating',
+            name='update_movie_rating',
             response_time=processing_time,
             response_length=0,
             context=None,
         )
 
-    @task(4)
-    def bookmark_remove_data(self):
-        """Insert user's bookmark remove in likes collection."""
+    @task
+    def update_movie_bookmark(self):
+        """Update movie data."""
+        filter_query = {'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)])}
+
+        update_query = {'$set': {'bookmark': True}}
+
         start_time = time.time()
 
-        self.bookmarks.update_one(
-            {'film_id': Binary.from_uuid(movies_id[random.randint(0, 999_999)])},
-            {'$set': {'bookmark': False}},
-        )
+        self.ugc_doc.update_one(filter_query, update_query)
 
         processing_time = int((time.time() - start_time) * 1000)
 
         # Gather statistics
         events.request.fire(
-            request_type='bookmark_remove_data',
-            name='bookmark_remove_data',
+            request_type='update_movie_bookmark',
+            name='insert_rating_bookmark',
             response_time=processing_time,
             response_length=0,
             context=None,
         )
 
-    @task(2)
-    def insert_review_data(self):
-        """Insert user's review in likes collection."""
+    @task
+    def update_movie_review_likes(self):
+        """Update movie data."""
+        filter_query = {'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)])}
+
+        update_query = {'$push': {'review.likes': Binary.from_uuid(users_id[random.randint(0, 999_999)])}}
+
         start_time = time.time()
 
-        self.reviews.insert_one(
-            {
-                'film_id': Binary.from_uuid(movies_id[random.randint(0, 999_999)]),
-                'user_id': Binary.from_uuid(users_id[random.randint(0, 999_999)]),
-                'review': fake.paragraph(nb_sentences=5, variable_nb_sentences=True),
-            }
-        )
+        self.ugc_doc.update_one(filter_query, update_query)
 
         processing_time = int((time.time() - start_time) * 1000)
 
         # Gather statistics
         events.request.fire(
-            request_type='insert_review_data',
-            name='insert_review_data',
+            request_type='update_movie_review_likes',
+            name='update_movie_review_likes',
             response_time=processing_time,
             response_length=0,
             context=None,
@@ -141,12 +160,17 @@ class MongoLoadTest(User):
     def on_test_stop(environment, **kwargs):
         """Event listener for test stop event."""
         client = pymongo.MongoClient(
-            host='mongodb://mongors1n1:27017',
+            host='mongodb://mongos1,mongos2',
             serverSelectionTimeoutMS=5000,
         )
-        client.drop_database('test_database')
-        client.close()
-        logger.info('TEST DATABASE DROPPED')
+        # client.drop_database('test_database')
+        # client.close()
+        # logger.info('TEST DATABASE DROPPED')
+
+        documents_count = client.test_database.ugc_doc.count_documents({})
+        logger.info('TOTAL NUMBER OF DOCUMENTS %d', documents_count)
+        global skips
+        logger.info('TOTAL SKIPS %d', skips)
         logger.info('TEST STOPED')
 
 
