@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15.0-alpine
+    environment:
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=test
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $POSTGRES_DB -U $POSTGRES_USER"]
+      interval: 3s
+      timeout: 20s
+      retries: 5
+      start_period: 80s
+    ports:
+      - 5432:5432
+
+  locust:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: locust_pg
+    hostname: locust_pg
+    volumes:
+      - ./load_test_insert_pg.py:/app/load_test_insert_pg.py
+      - ./models.py:/app/models.py
+      # - ./load_test_query_pg.py:/app/load_test_query_pg.py
+    tty: true
+    ports:
+      - 8089:8089
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+
+volumes:
+  postgres_data:

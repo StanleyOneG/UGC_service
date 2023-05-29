@@ -45,7 +45,7 @@ class MongoLoadTest(User):
 
     @events.test_start.add_listener
     def on_test_start(environment, **kwargs):
-        """Create MongoDB client and collection."""
+        """Inforation about test start."""
         logger.info('TEST STARTED.')
 
     @task(3)
