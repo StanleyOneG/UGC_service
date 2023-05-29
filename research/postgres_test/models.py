@@ -11,7 +11,7 @@ from sqlalchemy.sql import func
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-engine = create_engine('postgresql://test:test@postgres:5432/test')
+engine = create_engine('postgresql://test:test@localhost:5432/test')
 
 with engine.connect() as conn:
     if not conn.dialect.has_schema(conn, 'test'):
@@ -27,6 +27,9 @@ class User(Base):
 
     __tablename__ = 'user'
     id = Column(UUID(as_uuid=True), primary_key=True)
+    reviews = relationship('Review', back_populates='user', uselist=False)
+    user_movie_rating = relationship('UserMovieRating', back_populates='user', uselist=False)
+    user_movie_bookmark = relationship('UserMovieBookmark', back_populates='user', uselist=False)
 
 
 class Movie(Base):
@@ -34,17 +37,9 @@ class Movie(Base):
 
     __tablename__ = 'movie'
     id = Column(UUID(as_uuid=True), primary_key=True)
-
-
-class UserMovie(Base):
-    """UserMovie model."""
-
-    __tablename__ = 'user_movie'
-    id = Column(UUID(as_uuid=True), primary_key=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('user.id'), index=True)
-    movie_id = Column(UUID(as_uuid=True), ForeignKey('movie.id'), index=True)
-    movie = relationship('Movie')
-    __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='_user_movie'),)
+    reviews = relationship('Review', back_populates='movie', uselist=False)
+    user_movie_rating = relationship('UserMovieRating', back_populates='movie', uselist=False)
+    user_movie_bookmark = relationship('UserMovieBookmark', back_populates='movie', uselist=False)
 
 
 class UserMovieRating(Base):
@@ -52,9 +47,12 @@ class UserMovieRating(Base):
 
     __tablename__ = 'user_movie_rating'
     id = Column(UUID(as_uuid=True), primary_key=True)
-    user_movie_id = Column(UUID(as_uuid=True), ForeignKey('user_movie.id'))
+    user_id = Column(UUID(as_uuid=True), ForeignKey('user.id'))
+    movie_id = Column(UUID(as_uuid=True), ForeignKey('movie.id'))
     rating = Column(Integer)
-    user_movie = relationship(UserMovie)
+    user = relationship('User', back_populates='user_movie_rating', uselist=False)
+    movie = relationship('Movie', back_populates='user_movie_rating', uselist=False)
+    __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='_user_movie_rating_uc'),)
 
 
 class UserMovieBookmark(Base):
@@ -62,9 +60,12 @@ class UserMovieBookmark(Base):
 
     __tablename__ = 'user_movie_bookmark'
     id = Column(UUID(as_uuid=True), primary_key=True)
-    user_movie_id = Column(UUID(as_uuid=True), ForeignKey('user_movie.id'))
+    user_id = Column(UUID(as_uuid=True), ForeignKey('user.id'))
+    movie_id = Column(UUID(as_uuid=True), ForeignKey('movie.id'))
     bookmarked = Column(String)
-    user_movie = relationship(UserMovie)
+    user = relationship('User', back_populates='user_movie_bookmark', uselist=False)
+    movie = relationship('Movie', back_populates='user_movie_bookmark', uselist=False)
+    __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='_user_movie_bookmark_uc'),)
 
 
 class Review(Base):
@@ -72,31 +73,12 @@ class Review(Base):
 
     __tablename__ = 'review'
     id = Column(UUID(as_uuid=True), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('user.id'))
+    movie_id = Column(UUID(as_uuid=True), ForeignKey('movie.id'))
     text = Column(String)
     date = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, primary_key=True)
-    # likes = relationship('UserReviewLike', back_populates='user')
-    __table_args__ = (UniqueConstraint('id', name='_review_id_uc'),)
-
-
-class UserMovieReview(Base):
-    """User's review of movie model."""
-
-    __tablename__ = 'user_movie_review'
-    id = Column(UUID(as_uuid=True), primary_key=True)
-    user_movie_id = Column(UUID(as_uuid=True), ForeignKey('user_movie.id'), index=True)
-    review_id = Column(UUID(as_uuid=True), ForeignKey('review.id'), index=True)
-    user_movie = relationship(UserMovie)
-    review = relationship(Review)
-    __table_args__ = (UniqueConstraint('user_movie_id', 'review_id', name='_user_movie_review_uc'),)
-
-
-# class UserReviewLike(Base):
-#     """User's like of review model."""
-
-#     __tablename__ = 'user_review_like'
-#     id = Column(UUID(as_uuid=True), primary_key=True)
-#     user_review_id = Column(UUID(as_uuid=True), ForeignKey('user_movie_review.id'))
-#     user_review = relationship(UserMovieReview)
+    user = relationship('User', back_populates='reviews', uselist=False)
+    movie = relationship('Movie', back_populates='reviews', uselist=False)
 
 
 def create_tables():
@@ -105,5 +87,6 @@ def create_tables():
     logger.info('TABLES CREATED')
 
 
-# if __name__ == "__main__":
+if __name__ == '__main__':
+    pass
 #     create_tables()

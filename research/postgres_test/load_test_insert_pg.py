@@ -8,7 +8,7 @@ import uuid
 
 from faker import Faker
 from locust import HttpUser, LoadTestShape, between, events, task
-from models import Movie, create_tables
+from models import Movie, Review, User, UserMovieBookmark, UserMovieRating, create_tables
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -20,13 +20,12 @@ Faker.seed(9)
 
 random.seed(9)
 
-movies_id = [uuid.uuid4() for _ in range(1, 500_000)]
-users_id = [uuid.uuid4() for _ in range(1, 1_000_000)]
+movies_id = []
+users_id = []
 
 skips = 0
 
 create_tables()
-logger.info('Tables created')
 
 
 class PostgresLoadTest(HttpUser):
@@ -48,10 +47,11 @@ class PostgresLoadTest(HttpUser):
         """Information about test start."""
         logger.info('TEST STARTED')
 
-    @task
+    @task(4)
     def insert_movies(self):
         """Insert movie."""
-        movie_id = random.choice(movies_id)
+        movie_id = uuid.uuid4()
+        movies_id.append(movie_id)
         movie = Movie(id=movie_id)
         start_time = time.time()
         self.session.add(movie)
@@ -66,10 +66,120 @@ class PostgresLoadTest(HttpUser):
             exception=None,
         )
 
+    @task(4)
+    def insert_users(self):
+        """Insert user."""
+        user_id = uuid.uuid4()
+        users_id.append(user_id)
+        user = User(id=user_id)
+        start_time = time.time()
+        self.session.add(user)
+        self.session.commit()
+        processing_time = int((time.time() - start_time) * 1000)
+
+        events.request.fire(
+            request_type='insert_user',
+            name='insert_user',
+            response_time=processing_time,
+            response_length=0,
+            exception=None,
+        )
+
+    @task(1)
+    def insert_review(self):
+        """Insert review."""
+        try:
+            movie_id = random.choice(movies_id)
+            user_id = random.choice(users_id)
+            review = Review(
+                id=uuid.uuid4(),
+                movie_id=movie_id,
+                user_id=user_id,
+                text=fake.paragraph(nb_sentences=5, variable_nb_sentences=True),
+            )
+            start_time = time.time()
+            self.session.add(review)
+            self.session.commit()
+            processing_time = int((time.time() - start_time) * 1000)
+
+            events.request.fire(
+                request_type='insert_review',
+                name='insert_review',
+                response_time=processing_time,
+                response_length=0,
+                exception=None,
+            )
+
+        except Exception as e:
+            logger.error(e)
+            global skips
+            skips += 1
+
+    @task(2)
+    def insert_bookmark(self):
+        """Insert bookmark."""
+        try:
+            bookmark = UserMovieBookmark(
+                id=uuid.uuid4(),
+                user_id=random.choice(users_id),
+                movie_id=random.choice(movies_id),
+                bookmarked='True',
+            )
+            start_time = time.time()
+            self.session.add(bookmark)
+            self.session.commit()
+            processing_time = int((time.time() - start_time) * 1000)
+
+            events.request.fire(
+                request_type='insert_bookmark',
+                name='insert_bookmark',
+                response_time=processing_time,
+                response_length=0,
+                exception=None,
+            )
+
+        except Exception:
+            global skips
+            skips += 1
+
+    @task
+    def insert_rating(self):
+        """Insert rating."""
+        try:
+            rating = UserMovieRating(
+                id=uuid.uuid4(),
+                user_id=random.choice(users_id),
+                movie_id=random.choice(movies_id),
+                rating=random.randint(1, 10),
+            )
+            start_time = time.time()
+            self.session.add(rating)
+            self.session.commit()
+            processing_time = int((time.time() - start_time) * 1000)
+
+            events.request.fire(
+                request_type='insert_rating',
+                name='insert_rating',
+                response_time=processing_time,
+                response_length=0,
+                exception=None,
+            )
+
+        except Exception:
+            global skips
+            skips += 1
+
     @events.test_stop.add_listener
     def on_test_stop(environment, **kwargs):
         """Information about test stop."""
         logger.info('TEST FINISHED')
+
+        # engine = create_engine('postgresql://test:test@postgres:5432/test')
+        # Session = sessionmaker(bind=engine)
+        # session = Session()
+
+        # metadata_obj.drop_all(engine)
+        # logger.info('SCHEMA DROPED')
 
 
 class StagesShape(LoadTestShape):
