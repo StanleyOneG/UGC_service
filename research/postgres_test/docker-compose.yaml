@@ -6,6 +6,7 @@ services:
       - POSTGRES_USER=test
       - POSTGRES_PASSWORD=test
       - POSTGRES_DB=test
+    command: postgres -c 'max_connections=1000'
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     healthcheck:
@@ -26,7 +27,7 @@ services:
     volumes:
       - ./load_test_insert_pg.py:/app/load_test_insert_pg.py
       - ./models.py:/app/models.py
-      # - ./load_test_query_pg.py:/app/load_test_query_pg.py
+      - ./load_test_query_pg.py:/app/load_test_query_pg.py
     tty: true
     ports:
       - 8089:8089
