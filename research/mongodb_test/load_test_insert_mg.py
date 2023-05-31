@@ -163,9 +163,6 @@ class MongoLoadTest(User):
             host='mongodb://mongos1,mongos2',
             serverSelectionTimeoutMS=5000,
         )
-        # client.drop_database('test_database')
-        # client.close()
-        # logger.info('TEST DATABASE DROPPED')
 
         documents_count = client.test_database.ugc_doc.count_documents({})
         logger.info('TOTAL NUMBER OF DOCUMENTS %d', documents_count)

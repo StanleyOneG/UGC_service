@@ -122,14 +122,10 @@ class PostgresLoadTest(HttpUser):
     def insert_review(self):
         """Insert review."""
         try:
-            # movie_id = random.choice(movies_id)
-            # user_id = random.choice(users_id)
             user_movie = random.choice(user_movie_id)
             review = Review(
                 id=uuid.uuid4(),
                 user_movie_id=user_movie,
-                # movie_id=movie_id,
-                # user_id=user_id,
                 text=fake.paragraph(nb_sentences=5, variable_nb_sentences=True),
             )
             start_time = time.time()
@@ -158,8 +154,6 @@ class PostgresLoadTest(HttpUser):
             bookmark = UserMovieBookmark(
                 id=uuid.uuid4(),
                 user_movie_id=user_movie,
-                # user_id=random.choice(users_id),
-                # movie_id=random.choice(movies_id),
                 bookmarked='True',
             )
             start_time = time.time()
@@ -187,8 +181,6 @@ class PostgresLoadTest(HttpUser):
             rating = UserMovieRating(
                 id=uuid.uuid4(),
                 user_movie_id=user_movie,
-                # user_id=random.choice(users_id),
-                # movie_id=random.choice(movies_id),
                 rating=random.randint(1, 10),
             )
             start_time = time.time()

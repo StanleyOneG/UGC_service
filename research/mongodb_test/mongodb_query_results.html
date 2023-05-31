@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Report for load_test_insert_mg.py</title>
+    <title>Test Report for load_test_query_mg.py</title>
     <link rel="shortcut icon" href="../static/img/favicon.ico" type="image/x-icon"/>
     <style>
         body {
@@ -120,9 +120,9 @@ table.stats tr.total td {
 
         <div class="info">
 
-            <p>During: <span class="l10n datetime">2023-05-28 20:43:49</span> - <span class="l10n datetime">2023-05-28 20:45:30</span></p>
+            <p>During: <span class="l10n datetime">2023-05-31 07:42:51</span> - <span class="l10n datetime">2023-05-31 07:44:32</span></p>
             <p>Target Host: <span>None</span></p>
-            <p>Script: <span>load_test_insert_mg.py</span></p>
+            <p>Script: <span>load_test_query_mg.py</span></p>
         </div>
 
         <div class="requests">
@@ -145,67 +145,80 @@ table.stats tr.total td {
                 <tbody>
 
                         <tr>
-                            <td>update_movie_bookmark</td>
-                            <td>insert_rating_bookmark</td>
-                            <td>3529</td>
+                            <td>get_all_docs</td>
+                            <td>get_all_docs</td>
+                            <td>4338</td>
                             <td>0</td>
-                            <td>84</td>
-                            <td>1</td>
-                            <td>982</td>
                             <td>0</td>
-                            <td>35.1</td>
+                            <td>0</td>
+                            <td>3</td>
+                            <td>0</td>
+                            <td>42.9</td>
                             <td>0.0</td>
                         </tr>
 
                         <tr>
-                            <td>insert_user_data</td>
-                            <td>insert_user_data</td>
-                            <td>10426</td>
+                            <td>get_avg_movie_rating</td>
+                            <td>get_avg_movie_rating</td>
+                            <td>4380</td>
                             <td>0</td>
-                            <td>85</td>
-                            <td>2</td>
-                            <td>1013</td>
+                            <td>20</td>
+                            <td>1</td>
+                            <td>597</td>
                             <td>0</td>
-                            <td>103.6</td>
+                            <td>43.4</td>
                             <td>0.0</td>
                         </tr>
 
                         <tr>
-                            <td>update_movie_rating</td>
-                            <td>update_movie_rating</td>
-                            <td>3522</td>
+                            <td>get_bookmarks_of_user</td>
+                            <td>get_bookmarks_of_user</td>
+                            <td>4440</td>
                             <td>0</td>
-                            <td>79</td>
+                            <td>19</td>
                             <td>1</td>
-                            <td>987</td>
+                            <td>560</td>
                             <td>0</td>
-                            <td>35.0</td>
+                            <td>44.0</td>
                             <td>0.0</td>
                         </tr>
 
                         <tr>
-                            <td>update_movie_review_likes</td>
-                            <td>update_movie_review_likes</td>
-                            <td>3496</td>
+                            <td>get_most_rated_films</td>
+                            <td>get_most_rated_films</td>
+                            <td>8834</td>
                             <td>0</td>
-                            <td>84</td>
-                            <td>1</td>
-                            <td>983</td>
                             <td>0</td>
-                            <td>34.7</td>
+                            <td>0</td>
+                            <td>23</td>
+                            <td>0</td>
+                            <td>87.5</td>
+                            <td>0.0</td>
+                        </tr>
+
+                        <tr>
+                            <td>get_most_rated_films_with_limit</td>
+                            <td>get_most_rated_films_with_limit</td>
+                            <td>13152</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>22</td>
+                            <td>0</td>
+                            <td>130.2</td>
                             <td>0.0</td>
                         </tr>
 
                         <tr class="total">
                             <td></td>
                             <td>Aggregated</td>
-                            <td>20973</td>
+                            <td>35144</td>
                             <td>0</td>
-                            <td>84</td>
-                            <td>1</td>
-                            <td>1013</td>
+                            <td>5</td>
                             <td>0</td>
-                            <td>208.5</td>
+                            <td>597</td>
+                            <td>0</td>
+                            <td>347.9</td>
                             <td>0.0</td>
                         </tr>
 
@@ -233,68 +246,81 @@ table.stats tr.total td {
                 <tbody>
 
                         <tr>
-                            <td>update_movie_bookmark</td>
-                            <td>insert_rating_bookmark</td>
-                            <td>28</td>
-                            <td>47</td>
-                            <td>75</td>
-                            <td>140</td>
-                            <td>300</td>
-                            <td>380</td>
-                            <td>450</td>
-                            <td>980</td>
+                            <td>get_all_docs</td>
+                            <td>get_all_docs</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>3</td>
                         </tr>
 
                         <tr>
-                            <td>insert_user_data</td>
-                            <td>insert_user_data</td>
-                            <td>32</td>
-                            <td>48</td>
-                            <td>74</td>
-                            <td>140</td>
-                            <td>280</td>
-                            <td>370</td>
-                            <td>450</td>
-                            <td>1000</td>
-                        </tr>
-
-                        <tr>
-                            <td>update_movie_rating</td>
-                            <td>update_movie_rating</td>
-                            <td>25</td>
-                            <td>42</td>
+                            <td>get_avg_movie_rating</td>
+                            <td>get_avg_movie_rating</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>19</td>
                             <td>68</td>
-                            <td>130</td>
-                            <td>280</td>
-                            <td>370</td>
-                            <td>440</td>
-                            <td>990</td>
+                            <td>120</td>
+                            <td>240</td>
+                            <td>600</td>
                         </tr>
 
                         <tr>
-                            <td>update_movie_review_likes</td>
-                            <td>update_movie_review_likes</td>
-                            <td>27</td>
-                            <td>44</td>
-                            <td>71</td>
-                            <td>140</td>
-                            <td>290</td>
-                            <td>380</td>
-                            <td>480</td>
-                            <td>980</td>
+                            <td>get_bookmarks_of_user</td>
+                            <td>get_bookmarks_of_user</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>16</td>
+                            <td>70</td>
+                            <td>120</td>
+                            <td>240</td>
+                            <td>560</td>
+                        </tr>
+
+                        <tr>
+                            <td>get_most_rated_films</td>
+                            <td>get_most_rated_films</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>23</td>
+                        </tr>
+
+                        <tr>
+                            <td>get_most_rated_films_with_limit</td>
+                            <td>get_most_rated_films_with_limit</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>22</td>
                         </tr>
 
                         <tr class="total">
                             <td></td>
                             <td>Aggregated</td>
-                            <td>29</td>
-                            <td>46</td>
-                            <td>73</td>
-                            <td>140</td>
-                            <td>280</td>
-                            <td>380</td>
-                            <td>450</td>
-                            <td>1000</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>3</td>
+                            <td>19</td>
+                            <td>130</td>
+                            <td>600</td>
                         </tr>
 
                 </tbody>
@@ -313,7 +339,7 @@ table.stats tr.total td {
 
         <div id="tasks">
             <h2>Final ratio</h2>
-            <div class="tasks" data-tasks="{&quot;per_class&quot;: {&quot;MongoLoadTest&quot;: {&quot;ratio&quot;: 1.0, &quot;tasks&quot;: {&quot;insert_user_data&quot;: {&quot;ratio&quot;: 0.5}, &quot;update_movie_rating&quot;: {&quot;ratio&quot;: 0.16666666666666666}, &quot;update_movie_bookmark&quot;: {&quot;ratio&quot;: 0.16666666666666666}, &quot;update_movie_review_likes&quot;: {&quot;ratio&quot;: 0.16666666666666666}}}}, &quot;total&quot;: {&quot;MongoLoadTest&quot;: {&quot;ratio&quot;: 1.0, &quot;tasks&quot;: {&quot;insert_user_data&quot;: {&quot;ratio&quot;: 0.5}, &quot;update_movie_rating&quot;: {&quot;ratio&quot;: 0.16666666666666666}, &quot;update_movie_bookmark&quot;: {&quot;ratio&quot;: 0.16666666666666666}, &quot;update_movie_review_likes&quot;: {&quot;ratio&quot;: 0.16666666666666666}}}}}"></div>
+            <div class="tasks" data-tasks="{&quot;per_class&quot;: {&quot;MongoLoadQueryTest&quot;: {&quot;ratio&quot;: 1.0, &quot;tasks&quot;: {&quot;get_all_docs&quot;: {&quot;ratio&quot;: 0.125}, &quot;get_most_rated_films&quot;: {&quot;ratio&quot;: 0.25}, &quot;get_most_rated_films_with_limit&quot;: {&quot;ratio&quot;: 0.375}, &quot;get_bookmarks_of_user&quot;: {&quot;ratio&quot;: 0.125}, &quot;get_avg_movie_rating&quot;: {&quot;ratio&quot;: 0.125}}}}, &quot;total&quot;: {&quot;MongoLoadQueryTest&quot;: {&quot;ratio&quot;: 1.0, &quot;tasks&quot;: {&quot;get_all_docs&quot;: {&quot;ratio&quot;: 0.125}, &quot;get_most_rated_films&quot;: {&quot;ratio&quot;: 0.25}, &quot;get_most_rated_films_with_limit&quot;: {&quot;ratio&quot;: 0.375}, &quot;get_bookmarks_of_user&quot;: {&quot;ratio&quot;: 0.125}, &quot;get_avg_movie_rating&quot;: {&quot;ratio&quot;: 0.125}}}}}"></div>
         </div>
 
     </div>
@@ -590,12 +616,12 @@ function fillTasksFromRequest() {
     <script>
 
 var stats_history = {
-    "time": ["20:43:54", "20:43:59", "20:44:04", "20:44:09", "20:44:14", "20:44:19", "20:44:24", "20:44:29", "20:44:34", "20:44:39", "20:44:44", "20:44:49", "20:44:54", "20:44:59", "20:45:04", "20:45:09", "20:45:14", "20:45:19", "20:45:24", "20:45:29"].map(server_time => new Date(new Date().setUTCHours(...(server_time.split(":")))).toLocaleTimeString()),
-    "user_count": [{"value": 10}, {"value": 10}, {"value": 10}, {"value": 10}, {"value": 60}, {"value": 100}, {"value": 100}, {"value": 100}, {"value": 318}, {"value": 500}, {"value": 500}, {"value": 500}, {"value": 599}, {"value": 724}, {"value": 815}, {"value": 859}, {"value": 911}, {"value": 947}, {"value": 987}, {"value": 1000}],
-    "current_rps": [{"users": 10, "value": 3.6666666666666665}, {"users": 10, "value": 4.625}, {"users": 10, "value": 5.7}, {"users": 10, "value": 5.2}, {"users": 60, "value": 8.2}, {"users": 100, "value": 24.4}, {"users": 100, "value": 43.8}, {"users": 100, "value": 49.8}, {"users": 318, "value": 66.0}, {"users": 500, "value": 138.1}, {"users": 500, "value": 223.6}, {"users": 500, "value": 250.8}, {"users": 599, "value": 252.0}, {"users": 724, "value": 266.3}, {"users": 815, "value": 336.5}, {"users": 859, "value": 380.2}, {"users": 911, "value": 395.3}, {"users": 947, "value": 425.1}, {"users": 987, "value": 427.7}, {"users": 1000, "value": 436.7}],
-    "current_fail_per_sec": [{"users": 10, "value": 0}, {"users": 10, "value": 0}, {"users": 10, "value": 0}, {"users": 10, "value": 0}, {"users": 60, "value": 0}, {"users": 100, "value": 0}, {"users": 100, "value": 0}, {"users": 100, "value": 0}, {"users": 318, "value": 0}, {"users": 500, "value": 0}, {"users": 500, "value": 0}, {"users": 500, "value": 0}, {"users": 599, "value": 0}, {"users": 724, "value": 0}, {"users": 815, "value": 0}, {"users": 859, "value": 0}, {"users": 911, "value": 0}, {"users": 947, "value": 0}, {"users": 987, "value": 0}, {"users": 1000, "value": 0}],
-    "response_time_percentile_1": [{"users": 10, "value": 6}, {"users": 10, "value": 5}, {"users": 10, "value": 5}, {"users": 10, "value": 2}, {"users": 60, "value": 4}, {"users": 100, "value": 4}, {"users": 100, "value": 4}, {"users": 100, "value": 4}, {"users": 318, "value": 6}, {"users": 500, "value": 6}, {"users": 500, "value": 5}, {"users": 500, "value": 5}, {"users": 599, "value": 11}, {"users": 724, "value": 23}, {"users": 815, "value": 26}, {"users": 859, "value": 65}, {"users": 911, "value": 79}, {"users": 947, "value": 53}, {"users": 987, "value": 65}, {"users": 1000, "value": 56}],
-    "response_time_percentile_2": [{"users": 10, "value": 25}, {"users": 10, "value": 11}, {"users": 10, "value": 13}, {"users": 10, "value": 18}, {"users": 60, "value": 10}, {"users": 100, "value": 9}, {"users": 100, "value": 16}, {"users": 100, "value": 28}, {"users": 318, "value": 30}, {"users": 500, "value": 24}, {"users": 500, "value": 16}, {"users": 500, "value": 20}, {"users": 599, "value": 250}, {"users": 724, "value": 280}, {"users": 815, "value": 280}, {"users": 859, "value": 320}, {"users": 911, "value": 430}, {"users": 947, "value": 430}, {"users": 987, "value": 390}, {"users": 1000, "value": 380}],
+    "time": ["07:42:55", "07:43:00", "07:43:05", "07:43:10", "07:43:15", "07:43:20", "07:43:25", "07:43:30", "07:43:35", "07:43:40", "07:43:45", "07:43:50", "07:43:55", "07:44:00", "07:44:05", "07:44:10", "07:44:15", "07:44:20", "07:44:25", "07:44:30"].map(server_time => new Date(new Date().setUTCHours(...(server_time.split(":")))).toLocaleTimeString()),
+    "user_count": [{"value": 50}, {"value": 100}, {"value": 100}, {"value": 100}, {"value": 350}, {"value": 500}, {"value": 500}, {"value": 500}, {"value": 955}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}, {"value": 1000}],
+    "current_rps": [{"users": 50, "value": 12.0}, {"users": 100, "value": 24.0}, {"users": 100, "value": 39.4}, {"users": 100, "value": 49.8}, {"users": 350, "value": 60.9}, {"users": 500, "value": 132.1}, {"users": 500, "value": 222.9}, {"users": 500, "value": 250.6}, {"users": 955, "value": 266.4}, {"users": 1000, "value": 371.5}, {"users": 1000, "value": 480.1}, {"users": 1000, "value": 502.1}, {"users": 1000, "value": 502.0}, {"users": 1000, "value": 497.3}, {"users": 1000, "value": 494.8}, {"users": 1000, "value": 493.5}, {"users": 1000, "value": 495.1}, {"users": 1000, "value": 501.2}, {"users": 1000, "value": 498.6}, {"users": 1000, "value": 493.8}],
+    "current_fail_per_sec": [{"users": 50, "value": 0}, {"users": 100, "value": 0}, {"users": 100, "value": 0}, {"users": 100, "value": 0}, {"users": 350, "value": 0}, {"users": 500, "value": 0}, {"users": 500, "value": 0}, {"users": 500, "value": 0}, {"users": 955, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}],
+    "response_time_percentile_1": [{"users": 50, "value": 0}, {"users": 100, "value": 0}, {"users": 100, "value": 0}, {"users": 100, "value": 0}, {"users": 350, "value": 0}, {"users": 500, "value": 0}, {"users": 500, "value": 0}, {"users": 500, "value": 0}, {"users": 955, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}, {"users": 1000, "value": 0}],
+    "response_time_percentile_2": [{"users": 50, "value": 40}, {"users": 100, "value": 36}, {"users": 100, "value": 3}, {"users": 100, "value": 3}, {"users": 350, "value": 80}, {"users": 500, "value": 68}, {"users": 500, "value": 12}, {"users": 500, "value": 3}, {"users": 955, "value": 100}, {"users": 1000, "value": 100}, {"users": 1000, "value": 23}, {"users": 1000, "value": 10}, {"users": 1000, "value": 8}, {"users": 1000, "value": 6}, {"users": 1000, "value": 9}, {"users": 1000, "value": 6}, {"users": 1000, "value": 4}, {"users": 1000, "value": 10}, {"users": 1000, "value": 11}, {"users": 1000, "value": 4}],
     "markers": [],
 };
         var percentile1 = 0.5

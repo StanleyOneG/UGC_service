@@ -129,7 +129,6 @@ class PostgresLoadQueryTest(HttpUser):
             context=None,
         )
 
-    # function to test the query with a random movie id and count average movie rating
     @task
     def get_avg_movie_rating(self):
         """Get avg movie rating."""
@@ -161,8 +160,6 @@ class StagesShape(LoadTestShape):
         {'duration': 20, 'users': 100, 'spawn_rate': 10},
         {'duration': 40, 'users': 500, 'spawn_rate': 50},
         {'duration': 100, 'users': 1000, 'spawn_rate': 100},
-        # {'duration': 200, 'users': 1500, 'spawn_rate': 100},
-        # {'duration': 240, 'users': 10000, 'spawn_rate': 100},
     ]
 
     def tick(self):
