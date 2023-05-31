@@ -64,9 +64,11 @@ fQIDAQAB
 #  **Запуск приложения**
 
 Для запуска приложения необходимо запустить по очередь следующие файлы `docker-compose`:
-- kakfa/docker-compose up --build
-- etl-kafka/docker-compose up --build
-- ugc_api/docker-compose up --build
+- kakfa/docker-compose up --build -d
+- etl-kafka/docker-compose up --build -d
+- mongodb/docker-compose up --duild -d
+- mongodb/configuration.sh
+- ugc_api/docker-compose up --build -d
 
 Для остановки проекта используйте команду `docker-compose down`.
 
