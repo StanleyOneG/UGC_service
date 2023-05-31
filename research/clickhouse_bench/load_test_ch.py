@@ -37,7 +37,7 @@ class ClickHouseLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='average_progress_time',
+            request_type='GET',
             name='average_progress_time',
             response_time=processing_time,
             response_length=0,
@@ -56,7 +56,7 @@ class ClickHouseLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='movie_with_longest_progress_time',
+            request_type='GET',
             name='movie_with_longest_progress_time',
             response_time=processing_time,
             response_length=0,
@@ -86,7 +86,7 @@ class ClickHouseLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='progress_by_range',
+            request_type='GET',
             name='progress_by_range',
             response_time=processing_time,
             response_length=0,
@@ -105,7 +105,7 @@ class ClickHouseLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='total_progress',
+            request_type='GET',
             name='total_progress',
             response_time=processing_time,
             response_length=0,

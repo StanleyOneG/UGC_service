@@ -1,165 +1,179 @@
-"""Module for load test of MongoDB quries."""
+"""Module for load testing Cassandra queries."""
 
 import logging
 import random
 import time
 
-import pymongo
+from cassandra.cluster import Cluster, ConsistencyLevel
+from cassandra.policies import DCAwareRoundRobinPolicy
 from locust import LoadTestShape, User, between, events, task
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-client = pymongo.MongoClient(host='mongodb://mongos1,mongos2')
-all_docs = client.test_database.ugc_doc.find({})
-data = [data for data in all_docs]
-users = [movie.get('user_id') for movie in data]
-logger.info('TOTAL NUMBER OF USERS: %d', len(users))
-rated_movies = [movie.get('film_id') for movie in data]
-logger.info('TOTAL NUMBER OF MOVIES: %d', len(rated_movies))
+cluster = Cluster(
+    contact_points=['node1', 'node2', 'node3'], load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='DC1')
+)
+session = cluster.connect('test_keyspace')
+session.set_keyspace('test_keyspace')
+session.default_consistency_level = ConsistencyLevel.ONE
+logger.info('Connected to Cassandra cluster')
+
+movies_query = 'SELECT film_id FROM ugc_doc'
+users_query = 'SELECT user_id FROM ugc_doc'
+rating_movies_query = 'SELECT film_id FROM ugc_doc WHERE rating > 0 ALLOW FILTERING'
+logger.info('Fetching data from Cassandra')
+
+all_movies = session.execute(movies_query)
+movies = [row.film_id for row in all_movies if row.film_id is not None]
+
+all_users = session.execute(users_query)
+users = [row.user_id for row in all_users if row.user_id is not None]
+logger.info('Total number of users: %d', len(users))
+
+all_rated_movies = session.execute(rating_movies_query)
+rated_movies = [row.film_id for row in all_rated_movies if row.film_id is not None]
+logger.info('Total number of movies: %d', len(rated_movies))
 
 
-class MongoLoadQueryTest(User):
-    """Class for load test of MongoDB queries."""
+class CassandraLoadQueryTest(User):
+    """Class for load testing Cassandra queries."""
 
     wait_time = between(1, 3)
 
     def __init__(self, *args, **kwargs):
-        """Init method."""
+        """Initialize the user class."""
         super().__init__(*args, **kwargs)
 
-        self.client = pymongo.MongoClient(
-            host='mongodb://mongos1,mongos2',
+        self.cluster = Cluster(
+            contact_points=['node1', 'node2', 'node3'], load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='DC1')
         )
+        self.session = cluster.connect('test_keyspace')
+        self.session.set_keyspace('test_keyspace')
+        self.session.default_consistency_level = ConsistencyLevel.ONE
 
     @events.test_start.add_listener
     def on_test_start(environment, *args, **kwargs):
         """Event listener for test start."""
-        logger.info('TEST STARTED')
+        logger.info('Test started')
 
     def on_start(self):
-        """Set environment for user."""
-        global rated_movies
+        """Set environment for the user."""
+        global movies
         global users
-        self.rated_movies = rated_movies
+        global rated_movies
+        self.movies = movies
         self.users = users
+        self.rated_movies = rated_movies
 
     @task
     def get_all_docs(self):
         """Get all documents."""
+        query = 'SELECT * FROM ugc_doc'
+
         start_time = time.time()
 
-        self.client.test_database.ugc_doc.find({})
+        self.session.execute(query)
 
         processing_time = int((time.time() - start_time) * 1000)
 
-        # Gather statistics
         events.request.fire(
             request_type='GET',
             name='get_all_docs',
             response_time=processing_time,
             response_length=0,
-            context=None,
         )
 
     @task(2)
     def get_most_rated_films(self):
         """Get most rated films."""
-        query = {'rating': {'$gte': 9}}
+        query = 'SELECT * FROM ugc_doc WHERE rating >= 9 ALLOW FILTERING'
 
         start_time = time.time()
 
-        self.client.test_database.ugc_doc.find(query)
+        self.session.execute(query)
 
         processing_time = int((time.time() - start_time) * 1000)
 
-        # Gather statistics
         events.request.fire(
             request_type='GET',
             name='get_most_rated_films',
             response_time=processing_time,
             response_length=0,
-            context=None,
         )
 
     @task(3)
     def get_most_rated_films_with_limit(self):
         """Get most rated films with limit."""
-        query = {'rating': 10}
+        query = 'SELECT * FROM ugc_doc WHERE rating = 10 ALLOW FILTERING'
 
         start_time = time.time()
 
-        self.client.test_database.ugc_doc.find(query).limit(10)
+        result_set = self.session.execute(query)
+
+        results = []
+        for row in result_set:
+            results.append(row)
+
+            if len(results) >= 10:
+                break
 
         processing_time = int((time.time() - start_time) * 1000)
 
-        # Gather statistics
         events.request.fire(
             request_type='GET',
             name='get_most_rated_films_with_limit',
             response_time=processing_time,
             response_length=0,
-            context=None,
         )
 
     @task
     def get_bookmarks_of_user(self):
         """Get bookmarks of user."""
-        user = self.users[random.randint(0, len(self.users) - 1)]
-        # query to get all bookmarks of a user
-        query = [
-            {'$match': {'user_id': user}},
-            {'$group': {'_id': '$film_id', 'bookmarks': {'$push': '$bookmark'}}},
-        ]
+        user = random.choice(self.users)
+        query = f'SELECT film_id, bookmark FROM ugc_doc WHERE user_id = {user} ALLOW FILTERING'
 
         start_time = time.time()
 
-        self.client.test_database.ugc_doc.aggregate(query)
+        self.session.execute(query)
 
         processing_time = int((time.time() - start_time) * 1000)
 
-        # Gather statistics
         events.request.fire(
             request_type='GET',
             name='get_bookmarks_of_user',
             response_time=processing_time,
             response_length=0,
-            context=None,
         )
 
-    @task
+    @task(4)
     def get_avg_movie_rating(self):
-        """Get avg movie rating."""
-        query = {'film_id': self.rated_movies[random.randint(0, len(self.rated_movies) - 1)]}
+        """Get average movie rating."""
+        movie_id = random.choice(self.rated_movies)
+        query = f'SELECT AVG(rating) FROM ugc_doc WHERE film_id = {movie_id} ALLOW FILTERING'
 
         start_time = time.time()
 
-        self.client.test_database.ugc_doc.aggregate(
-            [
-                {'$match': query},
-                {'$group': {'_id': '$film_id', 'avg_rating': {'$avg': '$rating'}}},
-            ]
-        )
+        self.session.execute(query)
 
         processing_time = int((time.time() - start_time) * 1000)
 
-        # Gather statistics
         events.request.fire(
             request_type='GET',
             name='get_avg_movie_rating',
             response_time=processing_time,
             response_length=0,
-            context=None,
         )
 
     def on_stop(self):
         """Event listener for user stop event."""
-        self.client.close()
+        self.session.shutdown()
+        self.cluster.shutdown()
 
     @events.test_stop.add_listener
     def on_test_stop(environment, *args, **kwargs):
         """Event listener for test stop event."""
-        logger.info('TEST FINISHED')
+        logger.info('Test finished')
 
 
 class StagesShape(LoadTestShape):

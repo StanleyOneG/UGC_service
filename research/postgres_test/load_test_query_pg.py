@@ -55,7 +55,7 @@ class PostgresLoadQueryTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='get_all_users',
+            request_type='GET',
             name='get_all_users',
             response_time=processing_time,
             response_length=0,
@@ -70,7 +70,7 @@ class PostgresLoadQueryTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='get_all_movies',
+            request_type='GET',
             name='get_all_movies',
             response_time=processing_time,
             response_length=0,
@@ -87,7 +87,7 @@ class PostgresLoadQueryTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='get_most_rated_films',
+            request_type='GET',
             name='get_most_rated_films',
             response_time=processing_time,
             response_length=0,
@@ -104,7 +104,7 @@ class PostgresLoadQueryTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='get_most_rated_films_with_limit',
+            request_type='GET',
             name='get_most_rated_films_with_limit',
             response_time=processing_time,
             response_length=0,
@@ -122,7 +122,7 @@ class PostgresLoadQueryTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='get_bookmarks_of_user',
+            request_type='GET',
             name='get_bookmarks_of_user',
             response_time=processing_time,
             response_length=0,
@@ -140,7 +140,7 @@ class PostgresLoadQueryTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='get_avg_movie_rating',
+            request_type='GET',
             name='get_avg_movie_rating',
             response_time=processing_time,
             response_length=0,

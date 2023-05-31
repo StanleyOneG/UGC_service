@@ -62,7 +62,7 @@ class PostgresLoadTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='insert_movie',
+            request_type='POST',
             name='insert_movie',
             response_time=processing_time,
             response_length=0,
@@ -81,7 +81,7 @@ class PostgresLoadTest(HttpUser):
         processing_time = int((time.time() - start_time) * 1000)
 
         events.request.fire(
-            request_type='insert_user',
+            request_type='POST',
             name='insert_user',
             response_time=processing_time,
             response_length=0,
@@ -107,7 +107,7 @@ class PostgresLoadTest(HttpUser):
             processing_time = int((time.time() - start_time) * 1000)
 
             events.request.fire(
-                request_type='insert_user_movie',
+                request_type='POST',
                 name='insert_user_movie',
                 response_time=processing_time,
                 response_length=0,
@@ -134,7 +134,7 @@ class PostgresLoadTest(HttpUser):
             processing_time = int((time.time() - start_time) * 1000)
 
             events.request.fire(
-                request_type='insert_review',
+                request_type='POST',
                 name='insert_review',
                 response_time=processing_time,
                 response_length=0,
@@ -162,7 +162,7 @@ class PostgresLoadTest(HttpUser):
             processing_time = int((time.time() - start_time) * 1000)
 
             events.request.fire(
-                request_type='insert_bookmark',
+                request_type='POST',
                 name='insert_bookmark',
                 response_time=processing_time,
                 response_length=0,
@@ -189,7 +189,7 @@ class PostgresLoadTest(HttpUser):
             processing_time = int((time.time() - start_time) * 1000)
 
             events.request.fire(
-                request_type='insert_rating',
+                request_type='POST',
                 name='insert_rating',
                 response_time=processing_time,
                 response_length=0,

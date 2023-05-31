@@ -43,7 +43,7 @@ class KafkaLoadTest(HttpUser):
         processing_time = int((time.time() - request_time_start) * 1000)
 
         events.request.fire(
-            request_type='produce_messages',
+            request_type='POST',
             name='produce_messages',
             response_time=processing_time,
             response_length=0,

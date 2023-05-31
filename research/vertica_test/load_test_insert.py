@@ -60,7 +60,7 @@ class VerticaLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='Insert data',
+            request_type='POST',
             name='Insert data',
             response_time=processing_time,
             response_length=0,

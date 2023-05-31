@@ -1,12 +1,12 @@
-"""Module for load test of MongoDB cluster."""
+"""Module for load test of Cassandra cluster."""
 
 import logging
 import random
 import time
 import uuid
 
-import pymongo
-from bson import Binary
+from cassandra.cluster import Cluster, ConsistencyLevel
+from cassandra.policies import DCAwareRoundRobinPolicy
 from faker import Faker
 from locust import LoadTestShape, User, between, events, task
 
@@ -24,8 +24,8 @@ users_id = [uuid.uuid4() for _ in range(1, 1_000_000)]
 skips = 0
 
 
-class MongoLoadTest(User):
-    """Class for load test of MongoDB cluster."""
+class CassandraLoadTest(User):
+    """Class for load test of Cassandra cluster."""
 
     wait_time = between(1, 3)
 
@@ -33,44 +33,61 @@ class MongoLoadTest(User):
         """Init method."""
         super().__init__(*args, **kwargs)
 
-        self.client = pymongo.MongoClient(
-            host='mongodb://mongos1,mongos2',
+        self.cluster = Cluster(
+            contact_points=['node1', 'node2', 'node3'], load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='DC1')
         )
+        self.session = self.cluster.connect()
 
-        self.db = self.client.test_database
-        self.ugc_doc = self.db.ugc_doc
+        self.session.execute(
+            """
+            CREATE KEYSPACE IF NOT EXISTS test_keyspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3}
+            """
+        )
+        self.session.set_keyspace('test_keyspace')
+        self.session.default_consistency_level = ConsistencyLevel.ONE
 
-        self.ugc_doc.create_index([('film_id', pymongo.ASCENDING)], unique=True)
-        self.ugc_doc.create_index([('user_id', pymongo.ASCENDING)], unique=True)
+        self.session.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ugc_doc (
+                film_id UUID PRIMARY KEY,
+                user_id UUID,
+                rating INT,
+                bookmark BOOLEAN,
+                review MAP<UUID, TEXT>
+            )
+            """
+        )
 
     @events.test_start.add_listener
     def on_test_start(environment, **kwargs):
-        """Inforation about test start."""
+        """Information about test start."""
         logger.info('TEST STARTED.')
 
     @task(3)
     def insert_user_data(self):
-        """Insert user's like in likes collection."""
+        """Insert user's like in ugc_doc table."""
         start_time = time.time()
 
-        try:
-            self.ugc_doc.insert_one(
-                {
-                    'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)]),
-                    'user_id': Binary.from_uuid(users_id[random.randint(0, 999_999)]),
-                    'rating': random.randint(1, 10),
-                    'bookmark': False,
-                    'review': {
-                        'id': Binary.from_uuid(uuid.uuid4()),
-                        'review_body': fake.paragraph(nb_sentences=5, variable_nb_sentences=True),
-                        'review_date': int(time.time()),
-                        'likes': [Binary.from_uuid(users_id[random.randint(0, 999_999)])],
-                        'dislikes': [Binary.from_uuid(users_id[random.randint(0, 999_999)])],
-                    },
-                }
-            )
+        film_id = random.choice(movies_id)
+        user_id = random.choice(users_id)
+        review_id = uuid.uuid4()
 
-        except pymongo.errors.DuplicateKeyError:
+        query = """
+            INSERT INTO ugc_doc (film_id, user_id, rating, bookmark, review)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        params = (
+            film_id,
+            user_id,
+            random.randint(1, 10),
+            False,
+            {review_id: fake.paragraph(nb_sentences=5, variable_nb_sentences=True)},
+        )
+
+        try:
+            self.session.execute(query, params)
+
+        except Exception:
             pass
             global skips
             skips += 1
@@ -88,14 +105,18 @@ class MongoLoadTest(User):
 
     @task
     def update_movie_rating(self):
-        """Update movie data."""
-        filter_query = {'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)])}
+        """Update movie rating."""
+        film_id = random.choice(movies_id)
 
-        update_query = {'$set': {'rating': random.randint(1, 10)}}
+        query = """
+            UPDATE ugc_doc SET rating = %s
+            WHERE film_id = %s
+        """
+        params = (random.randint(1, 10), film_id)
 
         start_time = time.time()
 
-        self.ugc_doc.update_one(filter_query, update_query)
+        self.session.execute(query, params)
 
         processing_time = int((time.time() - start_time) * 1000)
 
@@ -110,21 +131,25 @@ class MongoLoadTest(User):
 
     @task
     def update_movie_bookmark(self):
-        """Update movie data."""
-        filter_query = {'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)])}
+        """Update movie bookmark."""
+        film_id = random.choice(movies_id)
 
-        update_query = {'$set': {'bookmark': True}}
+        query = """
+            UPDATE ugc_doc SET bookmark = %s
+            WHERE film_id = %s
+        """
+        params = (True, film_id)
 
         start_time = time.time()
 
-        self.ugc_doc.update_one(filter_query, update_query)
+        self.session.execute(query, params)
 
         processing_time = int((time.time() - start_time) * 1000)
 
         # Gather statistics
         events.request.fire(
-            request_type='update_movie_bookmark',
-            name='insert_rating_bookmark',
+            request_type='POST',
+            name='update_movie_bookmark',
             response_time=processing_time,
             response_length=0,
             context=None,
@@ -132,14 +157,19 @@ class MongoLoadTest(User):
 
     @task
     def update_movie_review_likes(self):
-        """Update movie data."""
-        filter_query = {'film_id': Binary.from_uuid(movies_id[random.randint(0, 499_999)])}
+        """Update movie review likes."""
+        film_id = random.choice(movies_id)
+        review_id = uuid.uuid4()
 
-        update_query = {'$push': {'review.likes': Binary.from_uuid(users_id[random.randint(0, 999_999)])}}
+        query = """
+            UPDATE ugc_doc SET review[%s] = %s
+            WHERE film_id = %s
+        """
+        params = (review_id, fake.paragraph(nb_sentences=5, variable_nb_sentences=True), film_id)
 
         start_time = time.time()
 
-        self.ugc_doc.update_one(filter_query, update_query)
+        self.session.execute(query, params)
 
         processing_time = int((time.time() - start_time) * 1000)
 
@@ -154,21 +184,22 @@ class MongoLoadTest(User):
 
     def on_stop(self):
         """Event listener for user stop event."""
-        self.client.close()
+        self.cluster.shutdown()
 
     @events.test_stop.add_listener
     def on_test_stop(environment, **kwargs):
         """Event listener for test stop event."""
-        client = pymongo.MongoClient(
-            host='mongodb://mongos1,mongos2',
-            serverSelectionTimeoutMS=5000,
+        cluster = Cluster(
+            contact_points=['node1', 'node2', 'node3'], load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='DC1')
         )
+        session = cluster.connect('test_keyspace')
 
-        documents_count = client.test_database.ugc_doc.count_documents({})
+        row = session.execute('SELECT COUNT(*) FROM ugc_doc')[0]
+        documents_count = row[0]
         logger.info('TOTAL NUMBER OF DOCUMENTS %d', documents_count)
         global skips
         logger.info('TOTAL SKIPS %d', skips)
-        logger.info('TEST STOPED')
+        logger.info('TEST STOPPED')
 
 
 class StagesShape(LoadTestShape):

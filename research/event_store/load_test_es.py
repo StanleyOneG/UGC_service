@@ -43,7 +43,7 @@ class EventStoreLoadTest(HttpUser):
         processing_time = int((time.time() - request_time_start) * 1000)
 
         events.request.fire(
-            request_type='write_message',
+            request_type='POST',
             name='write_message',
             response_time=processing_time,
             response_length=0,
