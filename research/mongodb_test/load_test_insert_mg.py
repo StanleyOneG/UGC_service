@@ -123,8 +123,8 @@ class MongoLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='update_movie_bookmark',
-            name='insert_rating_bookmark',
+            request_type='POST',
+            name='insert_bookmark',
             response_time=processing_time,
             response_length=0,
             context=None,
