@@ -5,6 +5,12 @@ services:
   mongors1n1:
     container_name: mongors1n1
     image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongors1n1:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017
     ports:
       - 27017:27017
