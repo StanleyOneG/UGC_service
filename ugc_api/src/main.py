@@ -7,8 +7,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
-
 from aiokafka import AIOKafkaProducer
+import sentry_sdk
+
 from api.v1 import progress
 from db import redis
 from services import kafka
@@ -34,6 +35,12 @@ async def lifespan(app: FastAPI):
     yield
     await redis.redis.close()
     await kafka.producer.stop()
+
+
+sentry_sdk.init(
+    dsn="https://79cdc9c7dfe1459988a887b444b2d5b2@o4505257123643392.ingest.sentry.io/4505274340409344",
+    traces_sample_rate=1.0,
+)
 
 app = FastAPI(
     title=settings.project.name,
