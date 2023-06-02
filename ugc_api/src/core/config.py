@@ -33,6 +33,20 @@ class KafkaSettings(BaseSettings):
     port: int = Field(..., env='KAFKA_PORT')
 
 
+class MongoSettings(BaseSettings):
+    """Configuration for Storage."""
+
+    database_name: str = Field(..., env='STORAGE_DATABASE_NAME')
+    collection_name: str = Field(..., env='STORAGE_COLLECTION_NAME')
+
+
+class AppSettings(BaseSettings):
+    """Configuration for the app."""
+
+    host: str = Field(..., env='APP_HOST')
+    port: int = Field(..., env='APP_PORT')
+
+
 class Settings(BaseSettings):
     """Helper class for configuration access."""
 
@@ -40,3 +54,5 @@ class Settings(BaseSettings):
     project = ProjectSettings()
     jwt = JwtSettings()
     kafka = KafkaSettings()
+    mongodb = MongoSettings()
+    app_settings = AppSettings()

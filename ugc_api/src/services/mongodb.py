@@ -8,19 +8,38 @@ from motor.motor_asyncio import AsyncIOMotorClient
 class MongoStorage(BaseStorage):
     """Class for handling MongoDB connection and operations."""
 
-    def __init__(self, storage_client: AsyncIOMotorClient, database_name: str, collection_name: str, **kwargs) -> None:
+    def __init__(self, database_name: str, collection_name: str):
         """Initialize MongoStorage class."""
-        self._client = storage_client
+        self._client = AsyncIOMotorClient('mongodb://mongos1,mongos2')
         self._database = self._client[database_name]
         self._collection = self._database[collection_name]
 
-    async def get_data(self, *args, **kwargs) -> dict:
-        """Get data from MongoDB."""
-        return await self._collection.find(*args, **kwargs)
+    # async def initialize(self):
+    #     """Initialize the MongoDB collection and index."""
+    #     await self.create_index()
 
-    async def set_data(self, *args, **kwargs) -> dict:
-        """Insert data to MongoDB."""
+    # async def create_index(self):
+    #     """Create a unique constraint for film and user id."""
+    #     index_model = IndexModel(
+    #         [("user_id", ASCENDING)],
+    #         unique=True,
+    #         name="user_id_unique_index",
+    #     )
+    #     await self._collection.create_indexes([index_model])
+
+    async def get_data(self, *args, **kwargs) -> list:
+        """Get data from MongoDB."""
+        cursor = self._collection.find(*args, **kwargs)
+        data = await cursor.to_list(length=None)
+        return data
+
+    async def create_data(self, *args, **kwargs) -> dict:
+        """Create data in MongoDB."""
         return await self._collection.insert_one(*args, **kwargs)
+
+    async def update_data(self, *args, **kwargs) -> dict:
+        """Update data in MongoDB."""
+        return await self._collection.update_one(*args, **kwargs)
 
     async def delete_data(self, *args, **kwargs) -> dict:
         """Delete data from MongoDB."""

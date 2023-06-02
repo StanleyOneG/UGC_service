@@ -7,16 +7,21 @@ class BaseStorage(ABC):
     """Abstract interface for a storage."""
 
     @abstractmethod
-    def get_data(self, *args, **kwargs) -> str:
+    async def get_data(self, *args, **kwargs) -> str:
         """Get data from storage."""
         pass
 
     @abstractmethod
-    def set_data(self, *args, **kwargs) -> None:
-        """Set data to storage."""
+    async def create_data(self, *args, **kwargs) -> None:
+        """Create data in storage."""
         pass
 
     @abstractmethod
-    def delete_data(self, *args, **kwargs) -> None:
+    async def update_data(self, *args, **kwargs) -> None:
+        """Update data in storage."""
+        pass
+
+    @abstractmethod
+    async def delete_data(self, *args, **kwargs) -> None:
         """Delete data from storage."""
         pass

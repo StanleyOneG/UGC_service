@@ -25,6 +25,12 @@ services:
   mongors1n2:
     container_name: mongors1n2
     image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongors1n2:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017
     ports:
       - 27027:27017
@@ -39,6 +45,12 @@ services:
   mongors1n3:
     container_name: mongors1n3
     image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongors1n3:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017
     ports:
       - 27037:27017
@@ -53,6 +65,12 @@ services:
   mongors2n1:
     container_name: mongors2n1
     image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongors2n1:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27017
     ports:
       - 27047:27017
@@ -67,6 +85,12 @@ services:
   mongors2n2:
     container_name: mongors2n2
     image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongors2n2:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27017
     ports:
       - 27057:27017
@@ -81,6 +105,12 @@ services:
   mongors2n3:
     container_name: mongors2n3
     image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongors2n3:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27017
     ports:
       - 27067:27017
