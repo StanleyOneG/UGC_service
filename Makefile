@@ -17,3 +17,14 @@ service_reup:
 	docker compose -f mongodb/docker-compose.yaml up --build -d
 	./mongodb/configuration.sh
 	docker compose -f ugc_api/docker-compose.yaml up --build -d
+
+service_stop:
+	docker stop `docker ps -a -q`
+
+service_prune:
+	docker stop `docker ps -a -q`
+	docker container prune -f
+	docker volume prune -f
+	rm -rf  /tmp/mongo_cluster/data1 /tmp/mongo_cluster/data2 /tmp/mongo_cluster/data3 \
+	/tmp/mongo_cluster/data4 /tmp/mongo_cluster/data5 /tmp/mongo_cluster/data6 /tmp/mongo_cluster/config1 \
+	/tmp/mongo_cluster/config2 /tmp/mongo_cluster/config3
