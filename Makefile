@@ -1,4 +1,5 @@
 service_up:
+	docker compose -f ../Auth_sprint_1/docker-compose.yaml up --build -d
 	docker compose -f kafka/docker-compose.yaml up --build -d
 	docker compose -f etl-kafka-ch/docker-compose.yaml up --build -d
 	docker compose -f mongodb/docker-compose.yaml up --build -d
@@ -12,6 +13,7 @@ service_reup:
 	rm -rf  /tmp/mongo_cluster/data1 /tmp/mongo_cluster/data2 /tmp/mongo_cluster/data3 \
 	/tmp/mongo_cluster/data4 /tmp/mongo_cluster/data5 /tmp/mongo_cluster/data6 /tmp/mongo_cluster/config1 \
 	/tmp/mongo_cluster/config2 /tmp/mongo_cluster/config3
+	docker compose -f ../Auth_sprint_1/docker-compose.yaml up --build -d
 	docker compose -f kafka/docker-compose.yaml up --build -d
 	docker compose -f etl-kafka-ch/docker-compose.yaml up --build -d
 	docker compose -f mongodb/docker-compose.yaml up --build -d
@@ -32,3 +34,4 @@ service_prune:
 	rm -rf  /tmp/mongo_cluster/data1 /tmp/mongo_cluster/data2 /tmp/mongo_cluster/data3 \
 	/tmp/mongo_cluster/data4 /tmp/mongo_cluster/data5 /tmp/mongo_cluster/data6 /tmp/mongo_cluster/config1 \
 	/tmp/mongo_cluster/config2 /tmp/mongo_cluster/config3
+	docker compose -f ../Auth_sprint_1/docker-compose.yaml down -v

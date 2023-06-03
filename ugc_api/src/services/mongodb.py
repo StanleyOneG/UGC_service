@@ -14,19 +14,6 @@ class MongoStorage(BaseStorage):
         self._database = self._client[database_name]
         self._collection = self._database[collection_name]
 
-    # async def initialize(self):
-    #     """Initialize the MongoDB collection and index."""
-    #     await self.create_index()
-
-    # async def create_index(self):
-    #     """Create a unique constraint for film and user id."""
-    #     index_model = IndexModel(
-    #         [("user_id", ASCENDING)],
-    #         unique=True,
-    #         name="user_id_unique_index",
-    #     )
-    #     await self._collection.create_indexes([index_model])
-
     async def get_data(self, *args, **kwargs) -> list:
         """Get data from MongoDB."""
         cursor = self._collection.find(*args, **kwargs)

@@ -25,3 +25,8 @@ class BaseStorage(ABC):
     async def delete_data(self, *args, **kwargs) -> None:
         """Delete data from storage."""
         pass
+
+    # @abstractmethod
+    # async def aggregate_data(self, *args, **kwargs) -> str:
+    #     """Aggregate data from storage."""
+    #     pass

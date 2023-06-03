@@ -12,8 +12,6 @@ services:
     expose:
       - 8000
     container_name: ugc_api
-    # volumes:
-    #   - ./src:/ugc_api:ro
     networks:
       - microservice-network
   redis_ugc:
