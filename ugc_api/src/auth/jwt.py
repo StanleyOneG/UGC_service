@@ -5,18 +5,21 @@ Used to check permissions and JWT token
 """
 import logging
 from datetime import datetime
-from functools import wraps
+from functools import lru_cache, wraps
 from http import HTTPStatus
-from functools import lru_cache
-
-from fastapi import HTTPException
-from jose import jwt
 
 from core import config
+from fastapi import HTTPException
+from jose import jwt
 
 
 @lru_cache
 def get_settings():
+    """
+    Get settings.
+
+    This function returns the settings object.
+    """
     return config.Settings()
 
 
@@ -61,9 +64,7 @@ def check_auth(endpoint_permission):
             decoded_token = jwt.decode(token, settings.jwt.public_key, algorithms=['RS256'])
             if decoded_token['exp'] > datetime.now().timestamp():
                 permissions = decoded_token['permissions']
-                user_id = decoded_token['sub']
                 if check_permission(permissions, endpoint_permission):
-                    kwargs['user_id'] = user_id
                     value = await func(*args, **kwargs)
                     return value
                 raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='You have no permission')
