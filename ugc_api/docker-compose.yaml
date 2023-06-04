@@ -1,17 +1,22 @@
 version: "3.8"
 services:
   logstash:
-      image: logstash:7.17.10
-      depends_on:
-        - elasticsearch
-      environment:
-        XPACK_MONITORING_ENABLED: "false"
-        ES_HOST: "elasticsearch:9200"
-      ports:
-        - "5044:5044/udp"
-      volumes:
-        - ./deploy/logstash/logstash.conf:/config/logstash.conf:ro
-      command: logstash -f /config/logstash.conf
+    image: logstash:7.17.10
+    depends_on:
+      - elasticsearch
+    environment:
+      XPACK_MONITORING_ENABLED: "false"
+      ES_HOST: "elasticsearch:9200"
+    expose:
+      - 5044
+    ports:
+      - "5044:5044/udp"
+    volumes:
+      - ./deploy/logstash/logstash.conf:/config/logstash.conf:ro
+      - /tmp/logs/nginx/:/var/log/nginx/:ro
+    command: logstash -f /config/logstash.conf
+    networks:
+      - microservice-network
 
   elasticsearch:
     image: elasticsearch:7.17.10
@@ -22,6 +27,8 @@ services:
       - 9200:9200
     volumes:
       - /tmp/esdata:/tmp/elasticsearch/data
+    networks:
+      - microservice-network
   # Обратите внимание: не стоит использовать для ELK тот же ES, который задействован для полнотекстового поиска в вашем сервисе
 
   kibana:
@@ -30,6 +37,9 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
+    networks:
+      - microservice-network
+
 
   ugc_api:
     build:
@@ -47,6 +57,9 @@ services:
       - ./src:/ugc_api:ro
     networks:
       - microservice-network
+    ports:
+      - 8000:8000
+
   redis_ugc:
     image: redis:latest
     volumes:
@@ -65,6 +78,7 @@ services:
     volumes:
       - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:rw
       - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /tmp/logs/nginx/:/var/log/nginx/
       - sprint08_ugc_api_static:/static:ro
     depends_on:
       - ugc_api

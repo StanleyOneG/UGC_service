@@ -33,6 +33,19 @@ class KafkaSettings(BaseSettings):
     port: int = Field(..., env='KAFKA_PORT')
 
 
+class SentrySettings(BaseSettings):
+    """Configuration for Sentry."""
+
+    dns: str = Field(..., env='SENTRY_DNS')
+
+
+class LogstashSettings(BaseSettings):
+    """Configuration for Logstash."""
+
+    port: int = Field(..., env='LOGSTASH_PORT')
+    host: str = Field(..., env='LOGSTASH_HOST')
+
+
 class Settings(BaseSettings):
     """Helper class for configuration access."""
 
@@ -40,3 +53,5 @@ class Settings(BaseSettings):
     project = ProjectSettings()
     jwt = JwtSettings()
     kafka = KafkaSettings()
+    sentry = SentrySettings()
+    logstash = LogstashSettings()
