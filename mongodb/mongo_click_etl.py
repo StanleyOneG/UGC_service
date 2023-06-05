@@ -50,7 +50,7 @@ def mongo_to_clickhouse(
     try:
         clickhouse_client.execute(
             """CREATE TABLE IF NOT EXISTS ugc_data
-            (film_id UUID, user_id UUID, rating Nullable(Int32), bookmark UInt8, review_body String, review_date Nullable(DateTime))
+            (film_id UUID, user_id UUID, rating Nullable(Int32), bookmark UInt8, review_body String, review_date String)
             ENGINE = MergeTree() ORDER BY (film_id, user_id)"""
         )
     except Exception as e:
@@ -81,8 +81,9 @@ def mongo_to_clickhouse(
             for mongo_doc in modified_documents:
                 review_data = mongo_doc.get('review')
                 if review_data is not None:
-                    review = Review.dict()
-                review = None
+                    review = Review.parse_obj(review_data)
+                else:
+                    review = None
 
                 ugc = dict(
                     film_id=uuid.UUID(bytes=mongo_doc.get('film_id')),
@@ -90,8 +91,9 @@ def mongo_to_clickhouse(
                     rating=mongo_doc.get('rating'),
                     bookmark=mongo_doc.get('bookmark'),
                     review_body=review.review_body if review is not None else '',
-                    review_date=review.review_date if review is not None else None,
+                    review_date=str(review.review_date) if review is not None else None,
                 )
+                logger.info('review_date: %s', ugc.get('review_date'))
 
                 # Replace 'None' values with None
                 for key, value in ugc.items():
@@ -99,7 +101,7 @@ def mongo_to_clickhouse(
                         if key == 'rating':
                             ugc[key] = 0
                         elif key == 'review_date':
-                            ugc[key] = 0
+                            ugc[key] = ''
                         else:
                             ugc[key] = 'NULL'
 
@@ -116,9 +118,12 @@ def mongo_to_clickhouse(
                             rating = {ugc["rating"]},
                             bookmark = {ugc["bookmark"]},
                             review_body = '{ugc["review_body"]}',
-                            review_date = {ugc["review_date"]}
+                            review_date = '{ugc["review_date"]}'
                             WHERE film_id = %(film_id)s AND user_id = %(user_id)s""",
-                            {'film_id': str(ugc['film_id']), 'user_id': str(ugc['user_id'])},
+                            {
+                                'film_id': str(ugc['film_id']),
+                                'user_id': str(ugc['user_id']),
+                            },
                         )
                         logger.info('Data updated in table "ugc_data": %s', ugc)
                     else:
