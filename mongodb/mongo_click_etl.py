@@ -53,39 +53,33 @@ def mongo_to_clickhouse(
             (film_id UUID, user_id UUID, rating Nullable(Int32), bookmark UInt8, review_body String, review_date Nullable(DateTime))
             ENGINE = MergeTree() ORDER BY (film_id, user_id)"""
         )
-        logger.info('Table "ugc_data" created')
     except Exception as e:
         logger.error(f'Error creating table "ugc_data": {e}')
 
     # create 'last_exc_timestamp' collection if it does not exist in MongoDB
     if 'last_exc_timestamp' not in mongo_client[mongo_database].list_collection_names():
         etl_time_collection = mongo_client[mongo_database]['last_exc_timestamp']
-        etl_time_collection.insert_one({'timestamp': 0})
+        etl_time_collection.insert_one({'timestamp': datetime.datetime(1970, 1, 1, 1)})
         logger.info('Collection "last_exc_timestamp" created')
 
     last_execution = mongo_client[mongo_database]['last_exc_timestamp'].find_one()
-    logger.info('TIMESTAMP: %s', last_execution)
+    logger.info('LAST_EXC_TIMESTAMP: %s', last_execution)
     if not last_execution:
-        etl_time_collection.insert_one({'timestamp': 0})
+        etl_time_collection.insert_one({'timestamp': datetime.datetime(1970, 1, 1, 1)})
         logger.info('No timestamp found in "last_exc_timestamp" collection')
 
-    logger.info('BEFORE LAST EXC TIMESTAMP FETCH')
     last_execution_timestamp = last_execution.get('timestamp')
     logger.info('LAST EXECUTION TIMESTAMP: %s', last_execution_timestamp)
 
     while True:
-        logger.info('INSIDE WHILE LOOP')
         try:
             # Query MongoDB for modified or created documents since the last execution
             query = {'last_modified': {'$gt': last_execution_timestamp}}
-            logger.info('QUERY: %s', query)
-            modified_documents = ugc_collection.find(query)
+            modified_documents = list(ugc_collection.find(query))
+            logger.info('MODIFIED_DOCUMENTS: %s', modified_documents)
 
-            clickhouse_data = []
-            for mongo_doc in list(modified_documents):
-                logger.info('MONGO_DOC: %s', mongo_doc)
+            for mongo_doc in modified_documents:
                 review_data = mongo_doc.get('review')
-                logger.info('REVIEW_DATA: %s', review_data)
                 if review_data is not None:
                     review = Review.dict()
                 review = None
@@ -95,7 +89,7 @@ def mongo_to_clickhouse(
                     user_id=uuid.UUID(bytes=mongo_doc.get('user_id')),
                     rating=mongo_doc.get('rating'),
                     bookmark=mongo_doc.get('bookmark'),
-                    review_body=review.review_body if review is not None else None,
+                    review_body=review.review_body if review is not None else '',
                     review_date=review.review_date if review is not None else None,
                 )
 
@@ -109,17 +103,33 @@ def mongo_to_clickhouse(
                         else:
                             ugc[key] = 'NULL'
 
-                clickhouse_data.append(ugc)
-
-            if clickhouse_data:
-                logger.info('CLICKHOUSE_DATA: %s', clickhouse_data)
                 try:
-                    clickhouse_client.execute(
-                        'INSERT INTO ugc_data (film_id, user_id, rating, bookmark, review_body, review_date) VALUES',
-                        clickhouse_data,
-                        types_check=True,
+                    # Check if the unique pair of film_id and user_id exists in ClickHouse
+                    existing_data = clickhouse_client.execute(
+                        'SELECT 1 FROM ugc_data WHERE film_id = %(film_id)s AND user_id = %(user_id)s LIMIT 1',
+                        {'film_id': str(ugc['film_id']), 'user_id': str(ugc['user_id'])},
                     )
-                    logger.info('Data inserted into table "ugc_data": %s', clickhouse_data)
+                    if existing_data:
+                        # Update the existing record in ClickHouse
+                        clickhouse_client.execute(
+                            f"""ALTER TABLE ugc_data UPDATE
+                            rating = {ugc["rating"]},
+                            bookmark = {ugc["bookmark"]},
+                            review_body = '{ugc["review_body"]}',
+                            review_date = {ugc["review_date"]}
+                            WHERE film_id = %(film_id)s AND user_id = %(user_id)s""",
+                            {'film_id': str(ugc['film_id']), 'user_id': str(ugc['user_id'])},
+                        )
+                        logger.info('Data updated in table "ugc_data": %s', ugc)
+                    else:
+                        # Insert a new record in ClickHouse
+                        clickhouse_client.execute(
+                            'INSERT INTO ugc_data (film_id, user_id, rating, bookmark, review_body, review_date) VALUES',
+                            [ugc],
+                            types_check=True,
+                        )
+                        logger.info('Data inserted into table "ugc_data": %s', ugc)
+
                     # update 'last_exc_timestamp' collection to set timestamp now
                     mongo_client[mongo_database]['last_exc_timestamp'].update_one(
                         {},
@@ -130,8 +140,9 @@ def mongo_to_clickhouse(
                         },
                     )
                     logger.info('Timestamp updated in "last_exc_timestamp" collection')
+
                 except Exception as e:
-                    logger.error(f'Error inserting data into table "ugc_data": {e}')
+                    logger.error(f'Error processing document: {mongo_doc}, Error: {e}')
 
             logger.info(f'Next iteration in {frequency} minutes.')
             sleep(frequency * 60)
@@ -151,7 +162,7 @@ if __name__ == '__main__':
             mongo_database=settings.mongodb.database_name,
             mongo_collection=settings.mongodb.collection_name,
             clickhouse_client=clickhouse_client,
-            frequency=3,
+            frequency=settings.app_settings.mongo_click_etl_frequency,
         )
 
     except Exception as e:

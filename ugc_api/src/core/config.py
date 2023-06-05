@@ -47,6 +47,7 @@ class AppSettings(BaseSettings):
 
     host: str = Field(..., env='APP_HOST')
     port: int = Field(..., env='APP_PORT')
+    mongo_click_etl_frequency: int = Field(..., env='APP_MONGO_CLICK_ETL_FREQUENCY')
 
 
 class Settings(BaseSettings):
