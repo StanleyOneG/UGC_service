@@ -9,7 +9,7 @@
 
 #  **Описание**
 
-Это API реализует сохранение и получение прогресса просмотра фильма пользователей.
+Это API реализует сохранение и получение прогресса просмотра фильма пользователей, а также управление пользовательским контентом по фильмам.
 
 ### Исследование по выбору хранилища описано в директории `research`
 
@@ -34,9 +34,9 @@
 
 ```
 # Параметры хранилище KAFKA
-KAFKA_TOPIC=movie_progress
 KAFKA_HOST=broker
 KAFKA_PORT=9092
+KAFKA_TOPIC=topic_ugc
 
 # Параметры базы данных REDIS
 REDIS_HOST=redis_ugc
@@ -47,6 +47,12 @@ PROJECT_NAME="UGC"
 PROJECT_DESCRIPTION="API для записи прогресса просмотра контента"
 PROJECT_VERSION="1.0.0"
 PROJECT_CACHE_SERVICE_NAME="redis"
+
+STORAGE_DATABASE_NAME=ugc
+STORAGE_COLLECTION_NAME=ugc_collection
+
+APP_HOST=0.0.0.0
+APP_PORT=8000
 
 # Пример ключа
 JWT_PUBLIC_KEY='-----BEGIN PUBLIC KEY-----
@@ -63,18 +69,59 @@ fQIDAQAB
 
 #  **Запуск приложения**
 
-Для запуска приложения необходимо запустить по очередь следующие файлы `docker-compose`:
-- kakfa/docker-compose up --build
-- etl-kafka/docker-compose up --build
-- ugc_api/docker-compose up --build
+Чтобы запустить приложение локально:
 
-Для остановки проекта используйте команду `docker-compose down`.
+1. Скачайте репозиторий с проектом
+
+    `git clone https://github.com/StanleyOneG/ugc_sprint_1.git`
+
+2. Скачайте репозиторий с Auth сервисом
+
+    `git clone https://github.com/VladIs10ve/Auth_sprint_1.git`
+
+3. Перейдите в директорию с UGC сервисом
+
+    `cd ugc_sprint_1/`
+
+4. Выполните команду
+
+    `make service_up`
+
+    для Linux
+
+    `sudo make service_up`
+
+
+    Для остановки проекта используйте команду
+
+    `make service_stop`
+
+    для Linux
+
+    `sudo make service_stop`
+
 
 #  **API**
 
 **Документация в формате OpenAPI:**
 
-Документация API доступна в формате OpenAPI по адресу http://localhost:89/api/openapi/
+Документация Auth API доступна по адресу http://localhost:88/apidocs
+
+Документация UGC API доступна по адресу http://localhost:89/api/openapi/
+
+#  **Как начать**
+
+Для взаимодействия с UGC API необходимо в auth API:
+
+1. Выполнить login под админом (email: admin@admin.com; password: admin)
+
+2. Создать permissions: "subscriber" и "frontend"
+
+3. Выдать данные permissions админу
+
+4. При необходимости обновить access токен с помощью функции Refresh access token в сервисе Auth
+
+Токены хранятся в cookies браузера
 
 ***Реализованный функционал***
 
@@ -83,20 +130,29 @@ API предоставляет набор функций для работы с 
 1. Set progress - сохранение прогресса просмотра фильма
 2. Get progress - получение прогресса просмора фильма
 
+А также функции для управления пользовательским контентом по фильмам:
+
+1. Сreate user film - Создание документа в базе данных со связкой id пользователя и фильма
+
+2. Add user film rating - Добавление рейтинга фильму юзером
+
+3. Set user film bookmark - Добавление пользователем фильма в закладки
+
+4. Add user film review - Добавление пользователем ревью по фильму
+
+5. Get user film info - Получение пользовательского контента по фильму
+
+6. Get movie avg rating - Получение среднего рейтинга фильма, на основании оценки пользователей
+
+7. Delete user film info - Удаление пользовательского контента по фильму
+
 **Хранение данных**
 
-Для хранения прогресса просмотра используется Kafka, Redis. Для аналитических задач, прогресс просмотра фильма также сохраняется в Clickhouse.
+Для хранения прогресса просмотра используется Kafka, Redis.
 
-#  **Как начать**
+Для хранения пользовательского контента по фильмам используется MongoDB.
 
-Для начала работы с API необходимо выполнить следующие шаги:
-
-1. Зпустить в Docker сервисы Auth_API и UGC_API
-2. Зарегистрировать или аутентифицировать пользователя в сервисе Auth для получения access и refresh токены
-3. Использовать полученный access токен для выполнения запросов к API
-4. При необходимости обновить access токен с помощью функции Refresh access token в сервисе Auth
-
-Токены хранятся в cookies браузера
+Для аналитических задач, прогресс просмотра фильма также сохраняется в Clickhouse.
 
 
 #  **Тесты**

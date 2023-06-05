@@ -1,16 +1,25 @@
 """UGC API main."""
 
+from functools import lru_cache
 from contextlib import asynccontextmanager
 
 import uvicorn
+from aiokafka import AIOKafkaProducer
+from api.v1 import progress, ugc_data
+from core import config
+from db import redis, storage
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
-from aiokafka import AIOKafkaProducer
-from api.v1 import progress
-from db import redis
 from services import kafka
-from core.config import get_settings
+from services.mongodb import MongoStorage
+
+
+@lru_cache
+def get_settings():
+    """Get application settings."""
+    return config.Settings()
+
 
 settings = get_settings()
 
@@ -20,7 +29,7 @@ async def lifespan(app: FastAPI):
     """Execute on application startup and shutdown.
 
     Args:
-        app: (FastApi): FastpApi instance
+        app: (FastApi): FastApi instance
     """
     redis.redis = Redis(host=settings.redis.host, port=settings.redis.port)
     bootstrap_server = '{host}:{port}'.format(
@@ -30,6 +39,10 @@ async def lifespan(app: FastAPI):
     kafka.producer = AIOKafkaProducer(
         bootstrap_servers=[bootstrap_server],
         api_version='0.10.2',
+    )
+    storage.storage = MongoStorage(
+        database_name=settings.mongodb.database_name,
+        collection_name=settings.mongodb.collection_name
     )
     await kafka.producer.start()
     yield
@@ -48,10 +61,11 @@ app = FastAPI(
 
 
 app.include_router(progress.router, prefix='/api/v1', tags=['progress'])
+app.include_router(ugc_data.router, prefix='/api/v1', tags=['UGC data'])
 
 if __name__ == '__main__':
     uvicorn.run(
         'main:app',
-        host='0.0.0.0',
-        port=8000,
+        host=settings.app_settings.host,
+        port=settings.app_settings.port,
     )

@@ -5,12 +5,23 @@ Used to check permissions and JWT token
 """
 import logging
 from datetime import datetime
-from functools import wraps
+from functools import lru_cache, wraps
 from http import HTTPStatus
 
+from core import config
 from fastapi import HTTPException
 from jose import jwt
-from core.config import get_settings
+
+
+@lru_cache
+def get_settings():
+    """
+    Get settings.
+
+    This function returns the settings object.
+    """
+    return config.Settings()
+
 
 settings = get_settings()
 logger = logging.getLogger(__name__)

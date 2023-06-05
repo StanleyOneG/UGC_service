@@ -67,7 +67,7 @@ class ClickHouseLoadTest(User):
 
         # Gather statistics
         events.request.fire(
-            request_type='execute_query',
+            request_type='POST',
             name='execute_query',
             response_time=processing_time,
             response_length=0,

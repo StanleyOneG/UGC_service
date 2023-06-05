@@ -7,27 +7,64 @@ import json
 import logging
 import uuid
 from http import HTTPStatus
+from functools import lru_cache
 
 from fastapi import APIRouter, Request, Depends
+
 from auth.jwt import check_auth
-from core.config import get_settings
+from core import config
 from redis.asyncio import Redis
 from db.redis import get_redis
-from aiokafka import AIOKafkaProducer
+from pydantic import BaseModel, Field
 from services.kafka import get_producer
+
+
+@lru_cache
+def get_settings():
+    """
+    Get settings.
+
+    This function returns the settings object.
+    """
+    return config.Settings()
+
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+class UserMovieProgress(BaseModel):
+    """
+    UserMovieProgress.
+
+    This class defines the data model for the user movie progress.
+    """
+
+    user_id: uuid.UUID = Field(..., description='UUID of the user')
+    movie_id: uuid.UUID = Field(..., description='UUID of the film')
+    timestamp: int = Field(..., description='Timestamp of the progress')
+
+
+class UserMovieIds(BaseModel):
+    """
+    UserMovieIds.
+
+    This class defines the data model for the user movie ids.
+    """
+
+    user_id: uuid.UUID = Field(..., description='UUID of the user')
+    movie_ids: list[uuid.UUID] = Field(..., description='UUID of the films')
+
+
 @router.post('/set_progress')
 @check_auth(endpoint_permission='subscriber')
-async def set_progress(request: Request,
-                       user_id=None,
-                       redis: Redis = Depends(get_redis),
-                       producer: AIOKafkaProducer = Depends(get_producer),
-                       ):
+async def set_progress(
+    request: Request,
+    user_movie_progress: UserMovieProgress,
+    redis: Redis = Depends(get_redis),
+    producer: AIOKafkaProducer = Depends(get_producer),
+):
     """
     Set the progress.
 
@@ -43,9 +80,10 @@ async def set_progress(request: Request,
     Returns:
         HTTPStatus: HTTP status code 200 (OK).
     """
-    data = await request.form()
-    timestamp = data.get('timestamp')
-    movie_id = data.get('movie_id')
+    # data = await request.form()
+    user_id = user_movie_progress.user_id
+    timestamp = user_movie_progress.timestamp
+    movie_id = user_movie_progress.movie_id
     if not timestamp:
         return HTTPStatus.BAD_REQUEST, {'msg': 'timestamp not present'}
     if not user_id:
@@ -64,11 +102,7 @@ async def set_progress(request: Request,
 
 @router.post('/get_progress')
 @check_auth(endpoint_permission='subscriber')
-async def get_progress(
-        request: Request,
-        user_id=None, redis:
-        Redis = Depends(get_redis),
-):
+async def get_progress(request: Request, user_movie_ids: UserMovieIds, redis: Redis = Depends(get_redis)):
     """
     Get the progress.
 
@@ -84,8 +118,8 @@ async def get_progress(
         List of timecodes for movies
     """
     # Fetch the latest records
-    data = await request.json()
-    movie_ids = data['movie_ids']
+    user_id = user_movie_ids.user_id
+    movie_ids = user_movie_ids.movie_ids
 
     list_of_timecodes = []
     for movie_id in movie_ids:
