@@ -24,3 +24,4 @@ class UGC(BaseModel):
     rating: int | None = Field(default=None, ge=1, le=10)
     bookmark: bool = Field(default=False)
     review: Review | None = Field(default=None)
+    last_modified: datetime.datetime = Field(default_factory=datetime.datetime.now)
