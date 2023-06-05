@@ -8,9 +8,6 @@ services:
     container_name: mongo_click_etl
     env_file:
       - ../ugc_api/.env
-    volumes:
-      - ./mongo_click_etl.py:/app/mongo_click_etl.py
-    tty: true
     networks:
       - microservice-network
 

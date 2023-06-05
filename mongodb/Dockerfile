@@ -5,12 +5,12 @@ ENV \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-COPY [ "mongodb/requirements.txt", "../ugc_api/src/core/config.py", "../ugc_api/src/models/ugc_model.py", "./" ]
+COPY [ "mongodb/requirements.txt", "mongodb/mongo_click_etl.py", "../ugc_api/src/core/config.py", "../ugc_api/src/models/ugc_model.py", "./" ]
 
 RUN \
     mkdir -p /app \
     && groupadd -r web && useradd -d /app -r -g web web \
-    # && mv mongo_click_etl.py /app/mongo_click_etl.py \
+    && mv mongo_click_etl.py /app/mongo_click_etl.py \
     && mv config.py /app/config.py \
     && mv ugc_model.py /app/ugc_model.py \
     && chown web:web -R /app \
@@ -24,4 +24,4 @@ WORKDIR /app
 
 USER web
 
-# ENTRYPOINT python mongo_click_etl.py
+ENTRYPOINT python mongo_click_etl.py

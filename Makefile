@@ -5,6 +5,7 @@ service_up:
 	docker compose -f mongodb/docker-compose.yaml up --build -d
 	./mongodb/configuration.sh
 	docker compose -f ugc_api/docker-compose.yaml up --build -d
+	docker compose -f mongodb/docker-compose-etl.yaml up --build -d
 
 service_reup:
 	docker stop `docker ps -a -q`
@@ -19,6 +20,7 @@ service_reup:
 	docker compose -f mongodb/docker-compose.yaml up --build -d
 	./mongodb/configuration.sh
 	docker compose -f ugc_api/docker-compose.yaml up --build -d
+	docker compose -f mongodb/docker-compose-etl.yaml up --build -d
 
 service_api_restart:
 	docker stop ugc_api
