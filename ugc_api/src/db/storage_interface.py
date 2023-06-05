@@ -8,22 +8,55 @@ class BaseStorage(ABC):
 
     @abstractmethod
     async def get_data(self, *args, **kwargs) -> str:
-        """Get data from storage."""
+        """
+        Get data from storage.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            str
+        """
         pass
 
     @abstractmethod
     async def create_data(self, *args, **kwargs) -> None:
-        """Create data in storage."""
+        """Create data in storage.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Nothing.
+        """
         pass
 
     @abstractmethod
     async def update_data(self, *args, **kwargs) -> None:
-        """Update data in storage."""
+        """Update data in storage.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Nothing.
+        """
         pass
 
     @abstractmethod
     async def delete_data(self, *args, **kwargs) -> None:
-        """Delete data from storage."""
+        """Delete data from storage.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Nothing.
+        """
         pass
 
     # @abstractmethod

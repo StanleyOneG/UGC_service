@@ -11,7 +11,6 @@ from functools import lru_cache
 
 from aiokafka import AIOKafkaProducer
 from fastapi import APIRouter, Request, Depends
-
 from auth.jwt import check_auth
 from core import config
 from redis.asyncio import Redis
@@ -74,7 +73,7 @@ async def set_progress(
 
     Args:
         request (Request): Request instance
-        user_id (str): User's id
+        user_movie_progress (UserMovieProgress): User's id
         redis (Redis): Redis instance
         producer (AIOKafkaProducer): AIOKafkaProducer instance
 
@@ -112,7 +111,7 @@ async def get_progress(request: Request, user_movie_ids: UserMovieIds, redis: Re
 
     Args:
         request: (Request): Request instance
-        user_id: (str): User's id
+        user_movie_ids: (UserMovieIds): User's id
         redis (Redis): Redis instance
 
     Returns:

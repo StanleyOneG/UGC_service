@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     )
     storage.storage = MongoStorage(
         database_name=settings.mongodb.database_name,
-        collection_name=settings.mongodb.collection_name
+        collection_name=settings.mongodb.collection_name,
     )
     await kafka.producer.start()
     yield

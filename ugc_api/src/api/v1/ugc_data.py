@@ -70,11 +70,12 @@ async def create_user_film(
     storage: BaseStorage = Depends(get_storage),
 ):
     """
-    Create user gerenated info by film.
+    Create user generated info by film.
 
     Args:
         request: UserFilmRequest
         storage: BaseStorage
+        user_film_request: UserFilmRequest
 
     Returns:
         UGC: UserFilmRequest
@@ -94,8 +95,8 @@ async def create_user_film(
     try:
         await storage.create_data(user_film_doc.dict())
 
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+    except Exception as exception:
+        raise HTTPException(status_code=400, detail=f'Error: {exception}')
 
     # Convert Binary fields to string representation
     user_film_doc.film_id = user_film_doc.film_id.hex()
@@ -123,6 +124,7 @@ async def add_film_rating(
     Args:
         request: UserFilmRating
         storage: BaseStorage
+        user_film_rating_request: UserFilmRating
 
     Returns:
         UGC: UserFilmRating
@@ -138,8 +140,8 @@ async def add_film_rating(
 
     try:
         await storage.update_data(user_film, {'$set': {'rating': user_film_rating_request.rating}})
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+    except Exception as exception:
+        raise HTTPException(status_code=400, detail=f'Error: {exception}')
 
     document = await storage.get_data(user_film)
     if not document:
@@ -175,6 +177,7 @@ async def add_film_bookmark(
     Args:
         request: UserFilmBookmark
         storage: BaseStorage
+        user_film_bookmark_request: UserFilmBookmark
 
     Returns:
         UGC: UserFilmBookmark
@@ -189,8 +192,8 @@ async def add_film_bookmark(
 
     try:
         await storage.update_data(user_film, {'$set': {'bookmark': user_film_bookmark_request.bookmark}})
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+    except Exception as exception:
+        raise HTTPException(status_code=400, detail=f'Error: {exception}')
 
     document = await storage.get_data(user_film)
     if not document:
@@ -226,6 +229,7 @@ async def add_film_review(
     Args:
         request: UserFilmReview
         storage: BaseStorage
+        user_film_review_request: UserFilmReview
 
     Returns:
         UGC: UserFilmReview
@@ -245,8 +249,8 @@ async def add_film_review(
 
     try:
         await storage.update_data(user_film, {'$set': {'review': user_film_review}})
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+    except Exception as exception:
+        raise HTTPException(status_code=400, detail=f'Error: {exception}')
 
     document = await storage.get_data(user_film)
     if not document:
@@ -282,6 +286,8 @@ async def get_user_film_info(
     Args:
         request: UserFilmRequest
         storage: BaseStorage
+        user_id: uuid.UUID
+        film_id: uuid.UUID
 
     Returns:
         UGC: UserFilmRequest
@@ -327,6 +333,7 @@ async def delete_user_film_info(
     Args:
         request: UserFilmRequest
         storage: BaseStorage
+        user_film_info_request: UserFilmRequest
 
     Returns:
         UGC: UserFilmRequest
@@ -345,8 +352,8 @@ async def delete_user_film_info(
 
     try:
         await storage.delete_data(user_film)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+    except Exception as exception:
+        raise HTTPException(status_code=400, detail=f'Error: {exception}')
 
     return HTTPStatus.OK
 
@@ -369,6 +376,7 @@ async def get_movie_avg_rating(
     Args:
         request: uuid.UUID
         storage: BaseStorage
+        movie_id: uuid.UUID
 
     Returns:
         float: movie avg rating
@@ -383,5 +391,4 @@ async def get_movie_avg_rating(
     if not found_movie_models:
         raise HTTPException(status_code=400, detail='Error: movie not found')
 
-    movie_avg_rating = sum([movie.rating for movie in found_movie_models]) / len(found_movie_models)
-    return movie_avg_rating
+    return sum([movie.rating for movie in found_movie_models]) / len(found_movie_models)
