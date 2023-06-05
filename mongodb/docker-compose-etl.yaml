@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mongo_click_etl:
+    build:
+      context: ..
+      dockerfile: mongodb/Dockerfile
+    container_name: mongo_click_etl
+    env_file:
+      - ../ugc_api/.env
+    volumes:
+      - ./mongo_click_etl.py:/app/mongo_click_etl.py
+    tty: true
+    networks:
+      - microservice-network
+
+networks:
+  microservice-network:
+    name: microservice-network

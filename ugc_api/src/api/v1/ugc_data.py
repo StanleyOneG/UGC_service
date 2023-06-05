@@ -9,6 +9,7 @@ import logging
 import uuid
 from http import HTTPStatus
 
+import pytz
 from auth.jwt import check_auth
 from bson import Binary
 from db.storage import get_storage
@@ -87,7 +88,13 @@ async def create_user_film(
     requested_film_id = user_film_request.film_id
     user_film_doc = UGC(film_id=Binary(requested_film_id.bytes), user_id=Binary(requested_user_id.bytes))
 
-    unique_doc = await storage.get_data({'user_id': user_film_doc.user_id, 'film_id': user_film_doc.film_id})
+    unique_doc = await storage.get_data(
+        {
+            'user_id': user_film_doc.user_id,
+            'film_id': user_film_doc.film_id,
+            'last_modified': datetime.datetime.now(pytz.utc),
+        }
+    )
 
     if unique_doc:
         raise HTTPException(status_code=400, detail='This pair of user and film already exists')
@@ -139,9 +146,12 @@ async def add_film_rating(
     user_film = {'user_id': Binary(requested_user_id.bytes), 'film_id': Binary(requested_film_id.bytes)}
 
     try:
-        await storage.update_data(user_film, {'$set': {'rating': user_film_rating_request.rating}})
-    except Exception as exception:
-        raise HTTPException(status_code=400, detail=f'Error: {exception}')
+        await storage.update_data(
+            user_film,
+            {'$set': {'rating': user_film_rating_request.rating, 'last_modified': datetime.datetime.now(pytz.utc)}},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {e}')
 
     document = await storage.get_data(user_film)
     if not document:
@@ -151,6 +161,7 @@ async def add_film_rating(
     # Convert Binary fields to string representation
     user_film_model.film_id = user_film_model.film_id.hex()
     user_film_model.user_id = user_film_model.user_id.hex()
+    user_film_model.last_modified = user_film_model.last_modified.isoformat()
     if user_film_model.review:
         user_film_model.review.id = user_film_model.review.id.hex()
         user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
@@ -191,9 +202,17 @@ async def add_film_bookmark(
     user_film = {'user_id': Binary(requested_user_id.bytes), 'film_id': Binary(requested_film_id.bytes)}
 
     try:
-        await storage.update_data(user_film, {'$set': {'bookmark': user_film_bookmark_request.bookmark}})
-    except Exception as exception:
-        raise HTTPException(status_code=400, detail=f'Error: {exception}')
+        await storage.update_data(
+            user_film,
+            {
+                '$set': {
+                    'bookmark': user_film_bookmark_request.bookmark,
+                    'last_modified': datetime.datetime.now(pytz.utc),
+                }
+            },
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {e}')
 
     document = await storage.get_data(user_film)
     if not document:
@@ -203,6 +222,7 @@ async def add_film_bookmark(
     # Convert Binary fields to string representation
     user_film_model.film_id = user_film_model.film_id.hex()
     user_film_model.user_id = user_film_model.user_id.hex()
+    user_film_model.last_modified = user_film_model.last_modified.isoformat()
     if user_film_model.review:
         user_film_model.review.id = user_film_model.review.id.hex()
         user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
@@ -248,9 +268,11 @@ async def add_film_review(
     }
 
     try:
-        await storage.update_data(user_film, {'$set': {'review': user_film_review}})
-    except Exception as exception:
-        raise HTTPException(status_code=400, detail=f'Error: {exception}')
+        await storage.update_data(
+            user_film, {'$set': {'review': user_film_review, 'last_modified': datetime.datetime.now(pytz.utc)}}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {e}')
 
     document = await storage.get_data(user_film)
     if not document:
@@ -261,6 +283,7 @@ async def add_film_review(
     user_film_model.film_id = user_film_model.film_id.hex()
     user_film_model.user_id = user_film_model.user_id.hex()
     user_film_model.review.id = user_film_model.review.id.hex()
+    user_film_model.last_modified = user_film_model.last_modified.isoformat()
     user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
 
     return user_film_model
@@ -308,6 +331,7 @@ async def get_user_film_info(
     # Convert Binary fields to string representation
     user_film_model.film_id = user_film_model.film_id.hex()
     user_film_model.user_id = user_film_model.user_id.hex()
+    user_film_model.last_modified = user_film_model.last_modified.isoformat()
     if user_film_model.review:
         user_film_model.review.id = user_film_model.review.id.hex()
         user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
