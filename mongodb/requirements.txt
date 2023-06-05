@@ -1,0 +1,4 @@
+clickhouse-driver==0.2.6
+pymongo==4.3.3
+pydantic==1.10.6
+pytz==2023.3

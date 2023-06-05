@@ -4,6 +4,7 @@
 import datetime
 import uuid
 
+import pytz
 from bson import Binary
 from pydantic import BaseModel, Field
 
@@ -13,7 +14,9 @@ class Review(BaseModel):
 
     id: Binary = Field(default_factory=lambda: Binary.from_uuid(uuid.uuid4()))
     review_body: str = Field(max_length=500)
-    review_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    review_date: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(pytz.utc),
+    )
 
 
 class UGC(BaseModel):
@@ -24,4 +27,6 @@ class UGC(BaseModel):
     rating: int | None = Field(default=None, ge=1, le=10)
     bookmark: bool = Field(default=False)
     review: Review | None = Field(default=None)
-    last_modified: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    last_modified: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(pytz.utc),
+    )
