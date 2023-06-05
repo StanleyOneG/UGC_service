@@ -9,6 +9,7 @@ import uuid
 from http import HTTPStatus
 from functools import lru_cache
 
+from aiokafka import AIOKafkaProducer
 from fastapi import APIRouter, Request, Depends
 
 from auth.jwt import check_auth
