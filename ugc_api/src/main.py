@@ -85,7 +85,9 @@ async def log_middleware(request: Request, call_next):
         request_id = request.headers['X-Request-ID']
         response.headers['X-Request-ID'] = request_id
 
-    logger.info(f"{client_host} - \"{method} {url}\" {response.status_code}", extra=response.headers)
+    extra = response.headers
+    extra['tag'] = 'ugc_api'
+    logger.info(f"{client_host} - \"{method} {url}\" {response.status_code}", extra=extra)
     return response
 
 
