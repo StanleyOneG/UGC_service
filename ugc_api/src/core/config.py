@@ -50,6 +50,19 @@ class AppSettings(BaseSettings):
     mongo_click_etl_frequency: int = Field(..., env='APP_MONGO_CLICK_ETL_FREQUENCY')
 
 
+class SentrySettings(BaseSettings):
+    """Configuration for Sentry."""
+
+    dns: str = Field(..., env='SENTRY_DNS')
+
+
+class LogstashSettings(BaseSettings):
+    """Configuration for Logstash."""
+
+    port: int = Field(..., env='LOGSTASH_PORT')
+    host: str = Field(..., env='LOGSTASH_HOST')
+
+
 class Settings(BaseSettings):
     """Helper class for configuration access."""
 
@@ -59,6 +72,8 @@ class Settings(BaseSettings):
     kafka = KafkaSettings()
     mongodb = MongoSettings()
     app_settings = AppSettings()
+    sentry = SentrySettings()
+    logstash = LogstashSettings()
 
 
 @lru_cache

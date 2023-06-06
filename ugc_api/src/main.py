@@ -1,14 +1,16 @@
 """UGC API main."""
-
+import logging
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 import uvicorn
 from aiokafka import AIOKafkaProducer
 from api.v1 import progress, ugc_data
 from core.config import get_settings
 from db import redis, storage
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
+from logstash_async.handler import AsynchronousLogstashHandler
 from redis.asyncio import Redis
 from services import kafka
 from services.mongodb import MongoStorage
@@ -42,6 +44,11 @@ async def lifespan(app: FastAPI):
     await kafka.producer.stop()
 
 
+sentry_sdk.init(
+    dsn=settings.sentry.dns,
+    traces_sample_rate=1.0,
+)
+
 app = FastAPI(
     title=settings.project.name,
     description=settings.project.description,
@@ -51,6 +58,34 @@ app = FastAPI(
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
 )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+logger.addHandler(
+    AsynchronousLogstashHandler(
+        settings.logstash.host,
+        settings.logstash.port,
+        transport='logstash_async.transport.UdpTransport',
+        database_path='logstash.db',
+    )
+)
+
+
+@app.middleware('http')
+async def log_middleware(request: Request, call_next):
+    """Log request and response."""
+    response = await call_next(request)
+    client_host = request.client.host
+    method = request.method
+    url = request.url
+
+    if 'X-Request-ID' in request.headers:
+        request_id = request.headers['X-Request-ID']
+        response.headers['X-Request-ID'] = request_id
+
+    logger.info(f"{client_host} - \"{method} {url}\" {response.status_code}", extra=response.headers)
+    return response
 
 
 app.include_router(progress.router, prefix='/api/v1', tags=['progress'])
