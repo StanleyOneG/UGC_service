@@ -11,6 +11,7 @@ from http import HTTPStatus
 from core import config
 from fastapi import HTTPException
 from jose import jwt
+from jose.exceptions import ExpiredSignatureError
 
 
 @lru_cache
@@ -55,18 +56,21 @@ def check_auth(endpoint_permission):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            request = kwargs['request']
-            token = request.cookies.get('access_token_cookie')
-            if not token:
-                raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token is missing')
-            decoded_token = jwt.decode(token, settings.jwt.public_key, algorithms=['RS256'])
-            if decoded_token['exp'] > datetime.now().timestamp():
-                permissions = decoded_token['permissions']
-                if check_permission(permissions, endpoint_permission):
-                    value = await func(*args, **kwargs)
-                    return value
-                raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='You have no permission')
-            raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token expired')
+            try:
+                request = kwargs['request']
+                token = request.cookies.get('access_token_cookie')
+                if not token:
+                    raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token is missing')
+                decoded_token = jwt.decode(token, settings.jwt.public_key, algorithms=['RS256'])
+                if decoded_token['exp'] > datetime.now().timestamp():
+                    permissions = decoded_token['permissions']
+                    if check_permission(permissions, endpoint_permission):
+                        value = await func(*args, **kwargs)
+                        return value
+                    raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='You have no permission')
+                raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token expired')
+            except ExpiredSignatureError:
+                raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail='Token expired')
 
         return wrapper
 

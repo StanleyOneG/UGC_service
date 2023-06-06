@@ -57,6 +57,33 @@ class UserFilmBookmark(UserFilmRequest):
     bookmark: bool = Field(..., description='Bookmark of the film')
 
 
+async def convert_mongo_doc_to_ugc_model(storage: BaseStorage, user_film: dict[str, Binary]) -> UGC:
+    """
+    Convert mongo doc to UGC model.
+
+    Args:
+        storage: BaseStorage - instance of BaseStorage
+        user_film: dict[str, Binary] - dictionary of {'user_if': Binary, 'film_id': Binary}
+
+    Returns:
+        UGC: UGC model
+    """
+    document = await storage.get_data(user_film)
+    if not document:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='This pair of user and film not exists')
+    user_film_model = UGC(**document[0])
+
+    # Convert Binary fields to string representation
+    user_film_model.film_id = user_film_model.film_id.hex()
+    user_film_model.user_id = user_film_model.user_id.hex()
+    user_film_model.last_modified = user_film_model.last_modified.isoformat()
+    if user_film_model.review:
+        user_film_model.review.id = user_film_model.review.id.hex()
+        user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
+
+    return user_film_model
+
+
 @router.post(
     '/create_user_film',
     summary='Создать пользовательскую информацию по фильму',
@@ -97,13 +124,13 @@ async def create_user_film(
     )
 
     if unique_doc:
-        raise HTTPException(status_code=400, detail='This pair of user and film already exists')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='This pair of user and film already exists')
 
     try:
         await storage.create_data(user_film_doc.dict())
 
     except Exception as exception:
-        raise HTTPException(status_code=400, detail=f'Error: {exception}')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f'Error: {exception}')
 
     # Convert Binary fields to string representation
     user_film_doc.film_id = user_film_doc.film_id.hex()
@@ -151,22 +178,9 @@ async def add_film_rating(
             {'$set': {'rating': user_film_rating_request.rating, 'last_modified': datetime.datetime.now(pytz.utc)}},
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f'Error: {e}')
 
-    document = await storage.get_data(user_film)
-    if not document:
-        raise HTTPException(status_code=400, detail='This pair of user and film not exists')
-    user_film_model = UGC(**document[0])
-
-    # Convert Binary fields to string representation
-    user_film_model.film_id = user_film_model.film_id.hex()
-    user_film_model.user_id = user_film_model.user_id.hex()
-    user_film_model.last_modified = user_film_model.last_modified.isoformat()
-    if user_film_model.review:
-        user_film_model.review.id = user_film_model.review.id.hex()
-        user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
-
-    return user_film_model
+    return await convert_mongo_doc_to_ugc_model(storage, user_film)
 
 
 @router.put(
@@ -212,22 +226,9 @@ async def add_film_bookmark(
             },
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f'Error: {e}')
 
-    document = await storage.get_data(user_film)
-    if not document:
-        raise HTTPException(status_code=400, detail='This pair of user and film not exists')
-    user_film_model = UGC(**document[0])
-
-    # Convert Binary fields to string representation
-    user_film_model.film_id = user_film_model.film_id.hex()
-    user_film_model.user_id = user_film_model.user_id.hex()
-    user_film_model.last_modified = user_film_model.last_modified.isoformat()
-    if user_film_model.review:
-        user_film_model.review.id = user_film_model.review.id.hex()
-        user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
-
-    return user_film_model
+    return await convert_mongo_doc_to_ugc_model(storage, user_film)
 
 
 @router.put(
@@ -272,21 +273,9 @@ async def add_film_review(
             user_film, {'$set': {'review': user_film_review, 'last_modified': datetime.datetime.now(pytz.utc)}}
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f'Error: {e}')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f'Error: {e}')
 
-    document = await storage.get_data(user_film)
-    if not document:
-        raise HTTPException(status_code=400, detail='This pair of user and film not exists')
-    user_film_model = UGC(**document[0])
-
-    # Convert Binary fields to string representation
-    user_film_model.film_id = user_film_model.film_id.hex()
-    user_film_model.user_id = user_film_model.user_id.hex()
-    user_film_model.review.id = user_film_model.review.id.hex()
-    user_film_model.last_modified = user_film_model.last_modified.isoformat()
-    user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
-
-    return user_film_model
+    return await convert_mongo_doc_to_ugc_model(storage, user_film)
 
 
 @router.get(
@@ -323,20 +312,7 @@ async def get_user_film_info(
 
     user_film = {'user_id': Binary(requested_user_id.bytes), 'film_id': Binary(requested_film_id.bytes)}
 
-    document = await storage.get_data(user_film)
-    if not document:
-        raise HTTPException(status_code=400, detail='This pair of user and film not exists')
-    user_film_model = UGC(**document[0])
-
-    # Convert Binary fields to string representation
-    user_film_model.film_id = user_film_model.film_id.hex()
-    user_film_model.user_id = user_film_model.user_id.hex()
-    user_film_model.last_modified = user_film_model.last_modified.isoformat()
-    if user_film_model.review:
-        user_film_model.review.id = user_film_model.review.id.hex()
-        user_film_model.review.review_date = user_film_model.review.review_date.isoformat()
-
-    return user_film_model
+    return await convert_mongo_doc_to_ugc_model(storage, user_film)
 
 
 @router.delete(
@@ -372,12 +348,12 @@ async def delete_user_film_info(
 
     document = await storage.get_data(user_film)
     if not document:
-        raise HTTPException(status_code=400, detail='This pair of user and film not exists')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='This pair of user and film not exists')
 
     try:
         await storage.delete_data(user_film)
     except Exception as exception:
-        raise HTTPException(status_code=400, detail=f'Error: {exception}')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f'Error: {exception}')
 
     return HTTPStatus.OK
 
@@ -413,6 +389,14 @@ async def get_movie_avg_rating(
     found_movie_models = [UGC(**movie) for movie in document]
 
     if not found_movie_models:
-        raise HTTPException(status_code=400, detail='Error: movie not found')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Error: movie not found')
 
-    return sum([movie.rating for movie in found_movie_models]) / len(found_movie_models)
+    rates = []
+
+    for movie in found_movie_models:
+        if movie.rating is not None:
+            rates.append(movie.rating)
+
+    avg_rating = sum(rates) / len(rates) if rates else None
+
+    return avg_rating

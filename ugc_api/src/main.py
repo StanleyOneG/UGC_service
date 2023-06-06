@@ -42,6 +42,7 @@ async def lifespan(app: FastAPI):
     yield
     await redis.redis.close()
     await kafka.producer.stop()
+    await storage.storage.close()
 
 
 sentry_sdk.init(

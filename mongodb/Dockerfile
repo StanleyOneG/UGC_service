@@ -18,8 +18,6 @@ RUN \
     && pip install --upgrade wheel \
     && python3 -m pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8089
-
 WORKDIR /app
 
 USER web
