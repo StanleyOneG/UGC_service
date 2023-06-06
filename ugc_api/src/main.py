@@ -1,25 +1,17 @@
 """UGC API main."""
 
-from functools import lru_cache
 from contextlib import asynccontextmanager
 
 import uvicorn
 from aiokafka import AIOKafkaProducer
 from api.v1 import progress, ugc_data
-from core import config
+from core.config import get_settings
 from db import redis, storage
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
 from services import kafka
 from services.mongodb import MongoStorage
-
-
-@lru_cache
-def get_settings():
-    """Get application settings."""
-    return config.Settings()
-
 
 settings = get_settings()
 
@@ -48,6 +40,7 @@ async def lifespan(app: FastAPI):
     yield
     await redis.redis.close()
     await kafka.producer.stop()
+
 
 app = FastAPI(
     title=settings.project.name,

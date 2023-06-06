@@ -7,14 +7,14 @@ from time import sleep
 
 import pytz
 from clickhouse_driver import Client as ClickHouseClient
-from config import Settings
+from config import get_settings
 from pymongo import MongoClient
 from ugc_model import Review
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-settings = Settings()
+settings = get_settings()
 
 
 def create_mongo_client():
